@@ -1,37 +1,95 @@
-export default function DashboardPage() {
+import Link from 'next/link';
+import { verifySession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
+import { redirect } from 'next/navigation';
+
+export default async function DashboardPage() {
+  const session = await verifySession();
+  if (!session?.userId) redirect('/login');
+
+  const carsCount = await prisma.car.count({
+    where: { userId: session.userId },
+  });
+
+  const forSaleCount = await prisma.car.count({
+    where: { userId: session.userId, forSale: true },
+  });
+
+  const forTradeCount = await prisma.car.count({
+    where: { userId: session.userId, forTrade: true },
+  });
+
+  const stats = [
+    { label: 'Cars in Garage', value: carsCount, href: '/garage', live: true },
+    { label: 'Listed for Sale', value: forSaleCount, href: '/marketplace', live: false },
+    { label: 'Open for Trade', value: forTradeCount, href: '/trading', live: false },
+    { label: 'Active Bids', value: '—', href: '/auctions', live: false },
+  ];
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-4xl font-bold tracking-tight">Dashboard Overview</h1>
-      <p className="text-zinc-400">
-        Welcome to your VROOM.IO command center. From here, you can manage your fleet, track metrics, and oversee your entire automotive operation.
-      </p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-zinc-400 mt-1 text-sm">Your automotive command center</p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-        {/* Placeholder Cards */}
-        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4 shadow-lg hover:border-red-900/50 transition-colors">
-          <div className="w-12 h-12 bg-red-600/20 text-red-500 rounded-lg flex items-center justify-center border border-red-500/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.4-1.7-1-2.2l-3.1-2.2c-.3-.2-.7-.3-1.1-.3H10c-.9 0-1.8.4-2.4 1M7 17H4c-.6 0-1-.4-1-1v-4c0-.6.4-1 1-1h8"/><circle cx="16.5" cy="17.5" r="2.5"/><circle cx="8.5" cy="17.5" r="2.5"/></svg>
-          </div>
-          <h3 className="text-xl font-semibold">Active Vehicles</h3>
-          <p className="text-3xl font-black font-mono">24</p>
-        </div>
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {stats.map((stat) =>
+          stat.live ? (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-red-900/50 transition-colors group"
+            >
+              <p className="text-3xl font-black font-mono text-white">{stat.value}</p>
+              <p className="text-zinc-400 text-sm mt-1 group-hover:text-zinc-300 transition-colors">
+                {stat.label}
+              </p>
+            </Link>
+          ) : (
+            <div
+              key={stat.label}
+              className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl opacity-50"
+            >
+              <p className="text-3xl font-black font-mono text-zinc-500">{stat.value}</p>
+              <p className="text-zinc-500 text-sm mt-1">{stat.label}</p>
+            </div>
+          )
+        )}
+      </div>
 
-        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4 shadow-lg hover:border-red-900/50 transition-colors">
-          <div className="w-12 h-12 bg-red-600/20 text-red-500 rounded-lg flex items-center justify-center border border-red-500/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          </div>
-          <h3 className="text-xl font-semibold">System Health</h3>
-          <p className="text-3xl font-black font-mono text-green-500">99.9%</p>
-        </div>
-
-        <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-xl space-y-4 shadow-lg hover:border-red-900/50 transition-colors">
-          <div className="w-12 h-12 bg-red-600/20 text-red-500 rounded-lg flex items-center justify-center border border-red-500/20">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <h3 className="text-xl font-semibold">Total Revenue</h3>
-          <p className="text-3xl font-black font-mono">$1.2M</p>
+      {/* Quick access */}
+      <div>
+        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-4">
+          Quick Access
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { href: '/garage', label: 'My Garage', desc: 'Upload and showcase your cars', active: true },
+            { href: '/marketplace', label: 'Marketplace', desc: 'Buy & sell listings', active: false },
+            { href: '/trading', label: 'Trading', desc: 'Propose car trades', active: false },
+            { href: '/auctions', label: 'Auctions', desc: 'Bid on vehicles', active: false },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`p-5 rounded-xl border transition-colors flex flex-col gap-1 ${
+                item.active
+                  ? 'bg-zinc-900 border-zinc-700 hover:border-red-600/40'
+                  : 'bg-zinc-900/40 border-zinc-800 opacity-60 pointer-events-none'
+              }`}
+            >
+              <span className="font-semibold text-white text-sm">{item.label}</span>
+              <span className="text-zinc-500 text-xs">{item.desc}</span>
+              {!item.active && (
+                <span className="text-xs text-zinc-600 mt-1">Coming soon</span>
+              )}
+            </Link>
+          ))}
         </div>
       </div>
     </div>
   );
 }
+

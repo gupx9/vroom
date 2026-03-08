@@ -13,4 +13,17 @@ model User {
   password   String
   isVerified Boolean  @default(false)
   otp        String?
+  cars       Car[]
+}
+
+model Car {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageData   String   @db.Text
+  description String
+  forSale     Boolean  @default(false)
+  forTrade    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
