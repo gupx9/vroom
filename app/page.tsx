@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -8,10 +9,7 @@ export default function Home() {
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-red-800 rounded-full mix-blend-screen filter blur-[128px] opacity-20"></div>
       
       <main className="z-10 flex flex-col items-center justify-center text-center px-4">
-        {/* Main Logo Text */}
-        <h1 className="text-7xl md:text-9xl font-black tracking-tighter mb-6 bg-gradient-to-br from-white via-white to-zinc-500 bg-clip-text text-transparent drop-shadow-sm">
-          VROOM<span className="text-red-600">.IO</span>
-        </h1>
+        <Image src="/logo.png" alt="VROOM.IO" width={720} height={250} className="mb-6 drop-shadow-sm" priority />
         
         <p className="max-w-[600px] text-zinc-400 text-lg md:text-xl mb-12 font-medium">
           The ultimate platform for managing your automotive needs. Experience performance, precision, and power.

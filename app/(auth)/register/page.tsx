@@ -1,6 +1,7 @@
 'use client';
 
 import { register } from '@/app/actions/auth';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useActionState } from 'react';
 
@@ -22,7 +23,8 @@ export default function RegisterPage() {
   return (
     <div className="flex flex-col space-y-6">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-tighter text-white">Join <span className="text-red-600">VROOM.IO</span></h1>
+        <Image src="/logo.png" alt="VROOM.IO" width={220} height={76} className="mx-auto mb-2" />
+        <h1 className="text-3xl font-bold tracking-tighter text-white">Join the Community</h1>
         <p className="text-zinc-400 text-sm">Create an account to get started</p>
       </div>
 
