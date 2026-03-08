@@ -14,6 +14,7 @@ interface CarItem {
   size: string;
   condition: string;
   price: number;
+  sellingPrice: number;
   forSale: boolean;
   forTrade: boolean;
 }
@@ -23,6 +24,7 @@ interface DioramaItem {
   imageData: string | null;
   description: string;
   price: number;
+  sellingPrice: number;
   forSale: boolean;
   forTrade: boolean;
 }
