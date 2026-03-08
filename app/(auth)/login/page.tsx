@@ -1,6 +1,7 @@
 'use client';
 
 import { login } from '@/app/actions/auth';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -22,8 +23,9 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col space-y-6">
       <div className="text-center space-y-2">
+        <Image src="/logo.png" alt="VROOM.IO" width={220} height={76} className="mx-auto mb-2" />
         <h1 className="text-3xl font-bold tracking-tighter text-white">Welcome Back</h1>
-        <p className="text-zinc-400 text-sm">Log in to your <span className="text-red-600 font-semibold">VROOM.IO</span> account</p>
+        <p className="text-zinc-400 text-sm">Log in to your account</p>
       </div>
 
       <form action={clientAction} className="space-y-4">
