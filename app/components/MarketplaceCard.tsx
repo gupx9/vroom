@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 interface MarketplaceCardProps {
   id: string;
   type: 'car' | 'diorama';
@@ -53,7 +55,13 @@ export default function MarketplaceCard({
       {/* Footer */}
       <div className="px-4 pb-4 flex items-center justify-between">
         <p className="text-red-400 font-bold text-sm">৳{sellingPrice.toLocaleString()}</p>
-        <span className="text-zinc-500 text-xs">by <span className="text-zinc-300 font-medium">@{sellerUsername}</span></span>
+        <Link
+          href={`/profile/${sellerUsername}`}
+          className="text-zinc-500 text-xs hover:text-zinc-300 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          by <span className="text-zinc-300 font-medium hover:text-red-400 transition-colors">@{sellerUsername}</span>
+        </Link>
       </div>
     </div>
   );

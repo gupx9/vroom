@@ -84,6 +84,7 @@ export async function login(formData: FormData) {
 
   const user = await prisma.user.findUnique({
     where: { email },
+    select: { id: true, username: true, email: true, password: true, isVerified: true, role: true },
   });
 
   if (!user || !user.isVerified) {
@@ -96,7 +97,7 @@ export async function login(formData: FormData) {
     return { error: 'Invalid credentials' };
   }
 
-  await createSession(user.id);
+  await createSession(user.id, user.role);
 
   redirect('/dashboard');
 }
