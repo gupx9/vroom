@@ -11,13 +11,14 @@ export default async function DashboardPage() {
     where: { userId: session.userId },
   });
 
-  const forSaleCount = await prisma.car.count({
-    where: { userId: session.userId, forSale: true },
-  });
-
-  const forTradeCount = await prisma.car.count({
-    where: { userId: session.userId, forTrade: true },
-  });
+  const [forSaleCars, forSaleDioramas, forTradeCars, forTradeDioramas] = await Promise.all([
+    prisma.car.count({ where: { userId: session.userId, forSale: true } }),
+    prisma.diorama.count({ where: { userId: session.userId, forSale: true } }),
+    prisma.car.count({ where: { userId: session.userId, forTrade: true } }),
+    prisma.diorama.count({ where: { userId: session.userId, forTrade: true } }),
+  ]);
+  const forSaleCount = forSaleCars + forSaleDioramas;
+  const forTradeCount = forTradeCars + forTradeDioramas;
 
   const stats = [
     { label: 'Cars in Garage', value: carsCount, href: '/garage', live: true },
