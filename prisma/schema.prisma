@@ -7,14 +7,49 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(uuid())
-  username   String    @unique
-  email      String    @unique
-  password   String
-  isVerified Boolean   @default(false)
-  otp        String?
-  cars       Car[]
-  dioramas   Diorama[]
+  id               String       @id @default(uuid())
+  username         String       @unique
+  email            String       @unique
+  password         String
+  isVerified       Boolean      @default(false)
+  otp              String?
+  reputation       Int          @default(0)
+  role             String       @default("user")  // "user" | "admin"
+  bannedUntil      DateTime?
+  createdAt        DateTime     @default(now())
+  cars             Car[]
+  dioramas         Diorama[]
+  reviewsReceived  UserReview[] @relation("ReviewTarget")
+  reviewsGiven     UserReview[] @relation("ReviewAuthor")
+  reportsReceived  UserReport[] @relation("ReportTarget")
+  reportsGiven     UserReport[] @relation("ReportAuthor")
+}
+
+model UserReview {
+  id        String   @id @default(uuid())
+  targetId  String
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  stars     Int
+  comment   String?
+  status    String   @default("approved") // "approved" | "pending"
+  createdAt DateTime @default(now())
+
+  @@unique([authorId, targetId])
+}
+
+model UserReport {
+  id        String   @id @default(uuid())
+  targetId  String
+  target    User     @relation("ReportTarget", fields: [targetId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  reason    String
+  status    String   @default("pending") // "pending" | "approved" | "rejected"
+  createdAt DateTime @default(now())
+
+  @@unique([authorId, targetId])
 }
 
 model Car {

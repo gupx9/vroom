@@ -14,6 +14,15 @@ export async function listItemForSale(
   if (!session?.userId) return { error: 'Not authenticated' };
   if (sellingPrice <= 0) return { error: 'Selling price must be greater than 0' };
 
+  // Check if user is banned
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { bannedUntil: true },
+  });
+  if (currentUser?.bannedUntil && currentUser.bannedUntil > new Date()) {
+    return { error: 'You are temporarily banned from posting listings' };
+  }
+
   if (type === 'car') {
     const car = await prisma.car.findFirst({ where: { id, userId: session.userId } });
     if (!car) return { error: 'Car not found' };

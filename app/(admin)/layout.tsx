@@ -4,25 +4,23 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import DashboardNav from '@/app/components/DashboardNav';
+import AdminNav from '@/app/components/AdminNav';
 
-export default async function DashboardLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const session = await verifySession();
 
-  if (!session?.userId) {
+  if (!session?.userId || session.role !== 'admin') {
     redirect('/login');
   }
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { username: true, role: true },
+    select: { username: true },
   });
-
-  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -30,22 +28,17 @@ export default async function DashboardLayout({
       <header className="border-b border-zinc-800 bg-zinc-950 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/dashboard" className="hover:opacity-80 transition-opacity shrink-0">
+          <Link href="/admin/moderation" className="hover:opacity-80 transition-opacity shrink-0">
             <Image src="/logo.png" alt="VROOM.IO" width={220} height={64} className="h-30 w-auto" />
           </Link>
 
           {/* Center nav links */}
-          <DashboardNav isAdmin={isAdmin} />
+          <AdminNav />
 
           {/* Right: username + logout */}
           <div className="flex items-center gap-4 shrink-0">
             <span className="text-sm text-zinc-400 hidden sm:block">
               <span className="text-white font-medium">{user?.username}</span>
-              {isAdmin && (
-                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-900/40 text-red-400 text-[10px] font-bold uppercase tracking-wider border border-red-800/50">
-                  Admin
-                </span>
-              )}
             </span>
             <form action={logout}>
               <button

@@ -10,7 +10,7 @@ const navItems = [
   { href: '/auctions', label: 'Auctions' },
 ];
 
-export default function DashboardNav() {
+export default function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -31,6 +31,21 @@ export default function DashboardNav() {
           </Link>
         );
       })}
+      {isAdmin && (
+        <Link
+          href="/admin/moderation"
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+            pathname.startsWith('/admin')
+              ? 'bg-red-600/20 text-red-400 border border-red-600/30'
+              : 'text-red-500/70 hover:text-red-400 hover:bg-red-950/30 border border-transparent hover:border-red-900/40'
+          }`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Moderation
+        </Link>
+      )}
     </nav>
   );
 }

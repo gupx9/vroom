@@ -1,32 +1,11 @@
-import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { encrypt, decrypt } from '@/lib/jwt';
+export { encrypt, decrypt } from '@/lib/jwt';
 
-const secretKey = process.env.JWT_SECRET || 'super-secret-key-that-should-be-in-env';
-const key = new TextEncoder().encode(secretKey);
-
-export async function encrypt(payload: any) {
-  return await new SignJWT(payload)
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime('1d')
-    .sign(key);
-}
-
-export async function decrypt(input: string): Promise<any> {
-  try {
-    const { payload } = await jwtVerify(input, key, {
-      algorithms: ['HS256'],
-    });
-    return payload;
-  } catch (error) {
-    return null;
-  }
-}
-
-export async function createSession(userId: string) {
+export async function createSession(userId: string, role: string = 'user') {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day
-  const session = await encrypt({ userId, expires });
+  const session = await encrypt({ userId, role, expires });
 
   const cookieStore = await cookies();
   cookieStore.set('session', session, {
@@ -38,16 +17,29 @@ export async function createSession(userId: string) {
   });
 }
 
+/**
+ * Verifies the session cookie and always returns the live role from the DB.
+ * This ensures that role changes (e.g. promoting a user to admin) are
+ * reflected immediately without requiring a new login.
+ */
 export async function verifySession() {
   const cookieStore = await cookies();
   const session = cookieStore.get('session')?.value;
-  
+
   if (!session) return null;
 
   const payload = await decrypt(session);
   if (!payload?.userId) return null;
 
-  return { userId: payload.userId as string };
+  // Always fetch role from DB so stale JWTs or manual role changes work instantly
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId as string },
+    select: { id: true, role: true },
+  });
+
+  if (!user) return null;
+
+  return { userId: user.id, role: user.role };
 }
 
 export async function removeSession() {
