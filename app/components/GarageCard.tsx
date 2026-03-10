@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toggleCarStatus, deleteCar } from '@/app/actions/garage';
 import { listItemForSale, unlistItemFromSale } from '@/app/actions/marketplace';
 import SetPriceModal from './SetPriceModal';
+import TradeOfferComposerModal from './TradeOfferComposerModal';
 
 interface GarageCardProps {
   id: string;
@@ -36,6 +37,7 @@ export default function GarageCard({
   const [deleting, setDeleting] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
+  const [showTradeModal, setShowTradeModal] = useState(false);
 
   const handleForSaleClick = async () => {
     if (forSale) {
@@ -117,28 +119,41 @@ export default function GarageCard({
         </div>
 
         {/* Action buttons */}
-        <div className="px-4 pb-4 flex gap-3">
-          <button
-            onClick={handleForSaleClick}
-            disabled={listingLoading}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 disabled:opacity-60 ${
-              forSale
-                ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
-                : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
-            }`}
-          >
-            For Sale
-          </button>
-          <button
-            onClick={handleToggleTrade}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 ${
-              forTrade
-                ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
-                : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
-            }`}
-          >
-            For Trade
-          </button>
+        <div className="px-4 pb-4 space-y-2">
+          <div className="flex gap-3">
+            <button
+              onClick={handleForSaleClick}
+              disabled={listingLoading}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 disabled:opacity-60 ${
+                forSale
+                  ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
+                  : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
+              }`}
+            >
+              For Sale
+            </button>
+            <button
+              onClick={handleToggleTrade}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 ${
+                forTrade
+                  ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
+                  : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
+              }`}
+            >
+              For Trade
+            </button>
+          </div>
+          {forTrade && (
+            <button
+              onClick={() => setShowTradeModal(true)}
+              className="w-full py-2 rounded-full text-sm font-semibold border border-blue-600/50 bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 transition-all duration-200 flex items-center justify-center gap-1.5"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" />
+              </svg>
+              Propose Trade
+            </button>
+          )}
         </div>
       </div>
 
@@ -148,6 +163,22 @@ export default function GarageCard({
           onConfirm={handleConfirmPrice}
           onClose={() => setShowPriceModal(false)}
           loading={listingLoading}
+        />
+      )}
+
+      {showTradeModal && (
+        <TradeOfferComposerModal
+          prefilledOfferedItem={{
+            id,
+            type: 'car',
+            imageData,
+            brand,
+            carModel,
+            size,
+            condition,
+          }}
+          onClose={() => setShowTradeModal(false)}
+          onSuccess={() => setShowTradeModal(false)}
         />
       )}
     </>

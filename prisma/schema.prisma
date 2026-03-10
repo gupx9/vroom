@@ -23,6 +23,8 @@ model User {
   reviewsGiven     UserReview[] @relation("ReviewAuthor")
   reportsReceived  UserReport[] @relation("ReportTarget")
   reportsGiven     UserReport[] @relation("ReportAuthor")
+  tradesSent       TradeOffer[] @relation("OffererTrades")
+  tradesReceived   TradeOffer[] @relation("ReceiverTrades")
 }
 
 model UserReview {
@@ -82,4 +84,19 @@ model Diorama {
   forTrade     Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model TradeOffer {
+  id               String   @id @default(uuid())
+  offererId        String
+  offerer          User     @relation("OffererTrades", fields: [offererId], references: [id], onDelete: Cascade)
+  receiverId       String?
+  receiver         User?    @relation("ReceiverTrades", fields: [receiverId], references: [id], onDelete: SetNull)
+  offeredCarIds    String[] // IDs of cars/dioramas the offerer is willing to trade away
+  requestedCarIds  String[] // IDs of cars/dioramas the offerer wants from the receiver
+  wantDescription  String?  // Free-text description of what the offerer wants
+  message          String?
+  status           String   @default("pending") // "pending" | "accepted" | "rejected" | "cancelled"
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
