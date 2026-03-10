@@ -66,8 +66,37 @@ model Car {
   description  String?
   forSale      Boolean  @default(false)
   forTrade     Boolean  @default(false)
+  forAuction   Boolean  @default(false)
+  auctionItem  AuctionItem?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model AuctionItem {
+  id        String   @id @default(uuid())
+  ownerId   String
+  carId     String
+  car       Car      @relation(fields: [carId], references: [id], onDelete: Cascade)
+  bids      AuctionBid[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([carId])
+  @@index([ownerId])
+}
+
+model AuctionBid {
+  id            String      @id @default(uuid())
+  auctionItemId String
+  bidderId      String
+  bidAmount Float
+  auctionItem AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([auctionItemId, bidderId])
+  @@index([auctionItemId])
+  @@index([bidderId])
 }
 
 model Diorama {
