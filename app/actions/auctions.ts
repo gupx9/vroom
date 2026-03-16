@@ -106,7 +106,12 @@ export async function getMyEligibleCars() {
   const cars = await prisma.car.findMany({
     where: {
       userId: session.userId,
-      forAuction: false,
+      auctions: {
+        none: {
+          finalized: false,
+          endsAt: { gt: new Date() },
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
     select: {
@@ -135,7 +140,12 @@ export async function createAuction(
   if (!session?.userId) return { error: 'Not authenticated' };
 
   if (startingBid <= 0) return { error: 'Starting bid must be greater than 0' };
-  if (durationHours <= 0) return { error: 'Invalid duration' };
+  if (!Number.isFinite(durationHours) || durationHours <= 0) {
+    return { error: 'Invalid duration in hours' };
+  }
+
+  const now = new Date();
+  const endsAt = new Date(now.getTime() + durationHours * 60 * 60 * 1000);
 
   // Check ban
   const user = await prisma.user.findUnique({
@@ -146,25 +156,46 @@ export async function createAuction(
     return { error: 'You are temporarily banned and cannot create auctions' };
   }
 
-  // Verify car belongs to user and isn't already in auction
-  const car = await prisma.car.findFirst({
-    where: { id: carId, userId: session.userId, forAuction: false },
-  });
-  if (!car) return { error: 'Car not found or already in auction' };
+  const result = await prisma.$transaction(async (tx) => {
+    // Lock the car row so concurrent requests cannot create multiple active auctions for the same car.
+    await tx.$queryRaw`SELECT id FROM "Car" WHERE id = ${carId} FOR UPDATE`;
 
-  const endsAt = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+    const car = await tx.car.findFirst({
+      where: { id: carId, userId: session.userId },
+      select: { id: true },
+    });
 
-  await prisma.$transaction([
-    prisma.car.update({ where: { id: carId }, data: { forAuction: true } }),
-    prisma.auction.create({
+    if (!car) {
+      return { error: 'Car not found' } as const;
+    }
+
+    const activeAuction = await tx.auction.findFirst({
+      where: {
+        carId,
+        finalized: false,
+        endsAt: { gt: now },
+      },
+      select: { id: true },
+    });
+
+    if (activeAuction) {
+      return { error: 'This car is already in an active auction' } as const;
+    }
+
+    await tx.car.update({ where: { id: carId }, data: { forAuction: true } });
+    await tx.auction.create({
       data: {
         carId,
         sellerId: session.userId,
         startingBid,
         endsAt,
       },
-    }),
-  ]);
+    });
+
+    return { success: true } as const;
+  });
+
+  if ('error' in result) return result;
 
   revalidatePath('/auctions');
   return { success: true };
@@ -243,10 +274,6 @@ export async function getAuctionDetail(auctionId: string): Promise<
         }),
       ]);
     }
-
-    revalidatePath('/auctions');
-    revalidatePath(`/auctions/${auctionId}`);
-    revalidatePath('/garage');
 
     // Re-fetch updated auction
     auction = await prisma.auction.findUnique({
