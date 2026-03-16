@@ -29,13 +29,41 @@ const DURATION_OPTIONS = [
   { label: '72 hours', value: 72 },
 ];
 
+function parseDaysHoursMinutesToHours(value: string): number | null {
+  const raw = value.trim();
+  const parts = raw.split(':');
+  if (parts.length !== 3) return null;
+
+  const [daysText, hoursText, minutesText] = parts;
+  if (!/^\d+$/.test(daysText) || !/^\d+$/.test(hoursText) || !/^\d+$/.test(minutesText)) {
+    return null;
+  }
+
+  const days = Number(daysText);
+  const hours = Number(hoursText);
+  const minutes = Number(minutesText);
+
+  if (!Number.isInteger(days) || !Number.isInteger(hours) || !Number.isInteger(minutes)) {
+    return null;
+  }
+
+  if (days < 0 || hours < 0 || minutes < 0) return null;
+  if (hours > 23 || minutes > 59) return null;
+
+  const totalHours = days * 24 + hours + minutes / 60;
+  if (totalHours <= 0) return null;
+
+  return totalHours;
+}
+
 export default function CreateAuctionModal({ onClose }: Props) {
   const router = useRouter();
   const [cars, setCars] = useState<EligibleCar[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCar, setSelectedCar] = useState<EligibleCar | null>(null);
   const [startingBid, setStartingBid] = useState('');
-  const [duration, setDuration] = useState(24);
+  const [duration, setDuration] = useState<number | 'custom'>(24);
+  const [customDuration, setCustomDuration] = useState('');
   const [bidError, setBidError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -56,10 +84,18 @@ export default function CreateAuctionModal({ onClose }: Props) {
       setBidError('Enter a valid starting bid greater than 0');
       return;
     }
+
+    const selectedDurationHours =
+      duration === 'custom' ? parseDaysHoursMinutesToHours(customDuration) : duration;
+    if (!Number.isFinite(selectedDurationHours) || selectedDurationHours <= 0) {
+      setSubmitError('Enter a valid custom duration as DD:HH:MM (days:hours:minutes)');
+      return;
+    }
+
     setBidError('');
     setSubmitError('');
     startTransition(async () => {
-      const res = await createAuction(selectedCar.id, parsed, duration);
+      const res = await createAuction(selectedCar.id, parsed, selectedDurationHours);
       if (res?.error) {
         setSubmitError(res.error);
         return;
@@ -128,7 +164,6 @@ export default function CreateAuctionModal({ onClose }: Props) {
                 </div>
               </div>
 
-              {/* Auction settings — shown after car is selected */}
               {selectedCar && (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="border-t border-zinc-800 pt-4">
@@ -155,12 +190,15 @@ export default function CreateAuctionModal({ onClose }: Props) {
                     {/* Duration */}
                     <div>
                       <label className="block text-xs font-medium text-zinc-400 mb-1.5">Auction Duration</label>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-4 gap-2 mb-3">
                         {DURATION_OPTIONS.map((opt) => (
                           <button
                             key={opt.value}
                             type="button"
-                            onClick={() => setDuration(opt.value)}
+                            onClick={() => {
+                              setDuration(opt.value);
+                              setSubmitError('');
+                            }}
                             className={`py-2 text-xs font-semibold rounded-lg border transition-all ${
                               duration === opt.value
                                 ? 'border-red-500 bg-red-950/40 text-red-300'
@@ -170,7 +208,39 @@ export default function CreateAuctionModal({ onClose }: Props) {
                             {opt.label}
                           </button>
                         ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDuration('custom');
+                            setSubmitError('');
+                          }}
+                          className={`py-2 text-xs font-semibold rounded-lg border transition-all ${
+                            duration === 'custom'
+                              ? 'border-red-500 bg-red-950/40 text-red-300'
+                              : 'border-zinc-700 bg-zinc-800/40 text-zinc-400 hover:border-zinc-500'
+                          }`}
+                        >
+                          Custom
+                        </button>
                       </div>
+                      
+                      {/* Custom DD:HH:MM Input */}
+                      {duration === 'custom' && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                          <label className="block text-xs font-medium text-zinc-400 mb-1.5">Custom Time (DD:HH:MM)</label>
+                          <input
+                            type="text"
+                            value={customDuration}
+                            onChange={(e) => {
+                              setCustomDuration(e.target.value);
+                              setSubmitError('');
+                            }}
+                            placeholder="00:00:00 (days:hours:minutes)"
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-colors"
+                          />
+                          <p className="mt-1 text-xs text-zinc-500">Example: 01:06:30 = 1 day, 6 hours, 30 minutes.</p>
+                        </div>
+                      )}
                     </div>
 
                     {submitError && <p className="mt-2 text-xs text-red-400">{submitError}</p>}
@@ -187,7 +257,7 @@ export default function CreateAuctionModal({ onClose }: Props) {
                     </button>
                     <button
                       type="submit"
-                      disabled={isPending}
+                      disabled={isPending || (duration === 'custom' && !parseDaysHoursMinutesToHours(customDuration))}
                       className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                       {isPending ? (
