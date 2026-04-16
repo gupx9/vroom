@@ -40,13 +40,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Verify the offerer actually owns all offered items and they are marked forTrade
+    // Verify the offerer owns all offered items
     const offeredCars = await prisma.car.findMany({
-      where: { id: { in: offeredCarIds }, userId: session.userId, forTrade: true },
+      where: { id: { in: offeredCarIds }, userId: session.userId },
       select: { id: true },
     });
     const offeredDioramas = await prisma.diorama.findMany({
-      where: { id: { in: offeredCarIds }, userId: session.userId, forTrade: true },
+      where: { id: { in: offeredCarIds }, userId: session.userId },
       select: { id: true },
     });
     const ownedOfferedIds = new Set([
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const invalidOffered = offeredCarIds.filter((id) => !ownedOfferedIds.has(id));
     if (invalidOffered.length > 0) {
       return NextResponse.json(
-        { error: `Some offered items are not yours or not marked for trade: ${invalidOffered.join(', ')}` },
+        { error: `Some offered items are not yours: ${invalidOffered.join(', ')}` },
         { status: 400 },
       );
     }
@@ -84,21 +84,42 @@ export async function POST(request: Request) {
       }
     }
 
-    const offer = await prisma.tradeOffer.create({
-      data: {
-        offererId: session.userId,
-        ...(receiverId ? { receiverId } : {}),
-        offeredCarIds,
-        requestedCarIds: receiverId ? requestedCarIds : [],
-        wantDescription: wantDescription.trim(),
-        message: message?.trim() || null,
-      },
-      select: { id: true, status: true, createdAt: true },
+    const offeredCarOnlyIds = offeredCars.map((item) => item.id);
+    const offeredDioramaOnlyIds = offeredDioramas.map((item) => item.id);
+    const offer = await prisma.$transaction(async (tx) => {
+      await Promise.all([
+        offeredCarOnlyIds.length
+          ? tx.car.updateMany({
+              where: { id: { in: offeredCarOnlyIds }, userId: session.userId },
+              data: { forTrade: true },
+            })
+          : Promise.resolve(),
+        offeredDioramaOnlyIds.length
+          ? tx.diorama.updateMany({
+              where: { id: { in: offeredDioramaOnlyIds }, userId: session.userId },
+              data: { forTrade: true },
+            })
+          : Promise.resolve(),
+      ]);
+
+      return tx.tradeOffer.create({
+        data: {
+          offererId: session.userId,
+          ...(receiverId ? { receiverId } : {}),
+          offeredCarIds,
+          requestedCarIds: receiverId ? requestedCarIds : [],
+          wantDescription: wantDescription.trim(),
+          message: message?.trim() || null,
+        },
+        select: { id: true, status: true, createdAt: true },
+      });
     });
 
     return NextResponse.json({ success: true, offer }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create trade offer' }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to create trade offer';
+    console.error('POST /api/trading/offers failed:', error);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

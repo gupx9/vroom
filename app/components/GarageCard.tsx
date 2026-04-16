@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toggleCarStatus, deleteCar } from '@/app/actions/garage';
 import { listItemForSale, unlistItemFromSale } from '@/app/actions/marketplace';
 import SetPriceModal from './SetPriceModal';
-import TradeOfferComposerModal from './TradeOfferComposerModal';
+import QuickTradeIntentModal from './QuickTradeIntentModal';
 
 interface GarageCardProps {
   id: string;
@@ -31,13 +32,14 @@ export default function GarageCard({
   forSale: initialForSale,
   forTrade: initialForTrade,
 }: GarageCardProps) {
+  const router = useRouter();
   const [forSale, setForSale] = useState(initialForSale);
   const [forTrade, setForTrade] = useState(initialForTrade);
   const [sellingPrice, setSellingPrice] = useState(initialSellingPrice);
   const [deleting, setDeleting] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
-  const [showTradeModal, setShowTradeModal] = useState(false);
+  const [showQuickTradeModal, setShowQuickTradeModal] = useState(false);
 
   const handleForSaleClick = async () => {
     if (forSale) {
@@ -69,8 +71,34 @@ export default function GarageCard({
   };
 
   const handleToggleTrade = async () => {
-    setForTrade((prev) => !prev);
+    if (forTrade) {
+      setForTrade(false);
+      await toggleCarStatus(id, 'forTrade');
+      return;
+    }
+
+    setForTrade(true);
     await toggleCarStatus(id, 'forTrade');
+    setShowQuickTradeModal(true);
+  };
+
+  const handleQuickTradeSubmit = async (wantDescription: string) => {
+    const res = await fetch('/api/trading/offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        offeredCarIds: [id],
+        wantDescription,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? 'Failed to post trade offer');
+    }
+
+    setShowQuickTradeModal(false);
+    router.push('/trading?tab=offers&sub=sent');
   };
 
   return (
@@ -143,17 +171,6 @@ export default function GarageCard({
               For Trade
             </button>
           </div>
-          {forTrade && (
-            <button
-              onClick={() => setShowTradeModal(true)}
-              className="w-full py-2 rounded-full text-sm font-semibold border border-blue-600/50 bg-blue-900/20 text-blue-400 hover:bg-blue-900/40 transition-all duration-200 flex items-center justify-center gap-1.5"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" />
-              </svg>
-              Propose Trade
-            </button>
-          )}
         </div>
       </div>
 
@@ -166,19 +183,10 @@ export default function GarageCard({
         />
       )}
 
-      {showTradeModal && (
-        <TradeOfferComposerModal
-          prefilledOfferedItem={{
-            id,
-            type: 'car',
-            imageData,
-            brand,
-            carModel,
-            size,
-            condition,
-          }}
-          onClose={() => setShowTradeModal(false)}
-          onSuccess={() => setShowTradeModal(false)}
+      {showQuickTradeModal && (
+        <QuickTradeIntentModal
+          onClose={() => setShowQuickTradeModal(false)}
+          onSubmit={handleQuickTradeSubmit}
         />
       )}
     </>

@@ -93,13 +93,11 @@ export default function TradeOfferComposerModal({
   const [selectedOfferedIds, setSelectedOfferedIds] = useState<string[]>(
     prefilledOfferedItem ? [prefilledOfferedItem.id] : []
   );
-  const [wantDescription, setWantDescription] = useState(
-    prefilledRequestedItem ? getItemName(prefilledRequestedItem) : ''
-  );
+  const [wantDescription, setWantDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch my forTrade items
+  // Fetch my garage items that are available for composing a trade offer
   useEffect(() => {
     setFetchingMyItems(true);
     fetch('/api/garage/trade-items')
@@ -194,7 +192,7 @@ export default function TradeOfferComposerModal({
           {/* What you want — targeted listing preview or free text */}
           <div className="space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-              {isTargeted ? 'You want' : 'What do you want in exchange?'}
+              {isTargeted ? 'Your trade offer text' : 'What do you want in exchange?'}
             </p>
 
             {isTargeted && (
@@ -235,7 +233,7 @@ export default function TradeOfferComposerModal({
               maxLength={300}
               placeholder={
                 isTargeted
-                  ? 'Add any extra notes about what you want…'
+                  ? 'Write your offer message for this trade…'
                   : 'e.g. "Looking for a 1:64 BMW M3 in mint condition, or any rare JDM model"'
               }
               className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-colors resize-none"
@@ -246,7 +244,7 @@ export default function TradeOfferComposerModal({
           {/* What you're offering */}
           <div className="space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
-              You&apos;re offering <span className="normal-case font-normal text-zinc-600">(pick one or more of your forTrade items)</span>
+              You&apos;re offering <span className="normal-case font-normal text-zinc-600">(pick one or more items from your garage)</span>
             </p>
 
             <div className="min-h-[100px] max-h-48 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900/40 p-2">
@@ -254,8 +252,8 @@ export default function TradeOfferComposerModal({
                 <div className="flex items-center justify-center h-20 text-zinc-600 text-sm">Loading your items…</div>
               ) : myItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-20 gap-1 text-center px-4">
-                  <p className="text-zinc-600 text-sm">No items marked for trade.</p>
-                  <p className="text-zinc-700 text-xs">Toggle &quot;For Trade&quot; on items in your garage first.</p>
+                  <p className="text-zinc-600 text-sm">No available items to offer right now.</p>
+                  <p className="text-zinc-700 text-xs">Add items to your garage first, then try again.</p>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">

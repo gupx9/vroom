@@ -3,7 +3,7 @@ import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 // GET /api/garage/trade-items
-// Returns the current user's cars and dioramas that are marked forTrade.
+// Returns the current user's garage items available to offer for trade.
 export async function GET() {
   try {
     const session = await verifySession();
@@ -13,7 +13,7 @@ export async function GET() {
 
     const [cars, dioramas] = await Promise.all([
       prisma.car.findMany({
-        where: { userId: session.userId, forTrade: true },
+        where: { userId: session.userId },
         select: {
           id: true,
           brand: true,
@@ -25,7 +25,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
       }),
       prisma.diorama.findMany({
-        where: { userId: session.userId, forTrade: true },
+        where: { userId: session.userId },
         select: {
           id: true,
           description: true,

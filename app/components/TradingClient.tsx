@@ -281,9 +281,19 @@ function OfferRow({
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function TradingClient({ userId }: { userId: string }) {
-  const [activeTab, setActiveTab] = useState<'browse' | 'offers'>('browse');
-  const [offersSubTab, setOffersSubTab] = useState<'received' | 'sent' | 'accepted'>('received');
+interface TradingClientProps {
+  userId: string;
+  initialTab?: 'browse' | 'offers';
+  initialOffersSubTab?: 'received' | 'sent' | 'accepted';
+}
+
+export default function TradingClient({
+  userId,
+  initialTab = 'browse',
+  initialOffersSubTab = 'received',
+}: TradingClientProps) {
+  const [activeTab, setActiveTab] = useState<'browse' | 'offers'>(initialTab);
+  const [offersSubTab, setOffersSubTab] = useState<'received' | 'sent' | 'accepted'>(initialOffersSubTab);
 
   // Browse state
   const [listings, setListings] = useState<ListingItem[]>([]);

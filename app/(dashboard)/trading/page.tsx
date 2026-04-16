@@ -3,9 +3,18 @@ import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import TradingClient from '@/app/components/TradingClient';
 
-export default async function TradingPage() {
+interface TradingPageProps {
+  searchParams: Promise<{ tab?: string; sub?: string }>;
+}
+
+export default async function TradingPage({ searchParams }: TradingPageProps) {
   const session = await verifySession();
   if (!session?.userId) redirect('/login');
+
+  const params = await searchParams;
+  const initialTab = params.tab === 'offers' ? 'offers' : 'browse';
+  const initialOffersSubTab =
+    params.sub === 'sent' || params.sub === 'accepted' ? params.sub : 'received';
 
   const currentUser = await prisma.user.findUnique({
     where: { id: session.userId },
@@ -42,7 +51,11 @@ export default async function TradingPage() {
           </div>
         </div>
       ) : (
-        <TradingClient userId={session.userId} />
+        <TradingClient
+          userId={session.userId}
+          initialTab={initialTab}
+          initialOffersSubTab={initialOffersSubTab}
+        />
       )}
     </div>
   );
