@@ -37,14 +37,52 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Diorama not found' }, { status: 404 });
     }
 
+    const nextValue = !diorama[field];
+
+    if (field === 'forTrade' && !nextValue) {
+      await prisma.$transaction([
+        prisma.diorama.update({
+          where: { id },
+          data: { forTrade: false },
+        }),
+        prisma.tradeOffer.updateMany({
+          where: {
+            AND: [
+              { status: 'pending' },
+              {
+                OR: [
+                  { offererId: session.userId },
+                  { receiverId: session.userId },
+                ],
+              },
+              {
+                OR: [
+                  { offeredCarIds: { has: id } },
+                  { requestedCarIds: { has: id } },
+                ],
+              },
+            ],
+          },
+          data: { status: 'cancelled' },
+        }),
+      ]);
+
+      revalidatePath('/garage');
+      revalidatePath('/trading');
+
+      return NextResponse.json({ success: true, [field]: false }, { status: 200 });
+    }
+
     await prisma.diorama.update({
       where: { id },
-      data: { [field]: !diorama[field] },
+      data: { [field]: nextValue },
     });
 
     revalidatePath('/garage');
+    if (field === 'forSale') revalidatePath('/marketplace');
+    if (field === 'forTrade') revalidatePath('/trading');
 
-    return NextResponse.json({ success: true, [field]: !diorama[field] }, { status: 200 });
+    return NextResponse.json({ success: true, [field]: nextValue }, { status: 200 });
   } catch {
     return NextResponse.json({ error: 'Failed to toggle diorama status' }, { status: 500 });
   }

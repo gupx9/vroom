@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toggleCarStatus, deleteCar } from '@/app/actions/garage';
 import { listItemForSale, unlistItemFromSale } from '@/app/actions/marketplace';
 import SetPriceModal from './SetPriceModal';
+import QuickTradeIntentModal from './QuickTradeIntentModal';
 
 interface GarageCardProps {
   id: string;
@@ -30,12 +32,14 @@ export default function GarageCard({
   forSale: initialForSale,
   forTrade: initialForTrade,
 }: GarageCardProps) {
+  const router = useRouter();
   const [forSale, setForSale] = useState(initialForSale);
   const [forTrade, setForTrade] = useState(initialForTrade);
   const [sellingPrice, setSellingPrice] = useState(initialSellingPrice);
   const [deleting, setDeleting] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [listingLoading, setListingLoading] = useState(false);
+  const [showQuickTradeModal, setShowQuickTradeModal] = useState(false);
 
   const handleForSaleClick = async () => {
     if (forSale) {
@@ -67,8 +71,34 @@ export default function GarageCard({
   };
 
   const handleToggleTrade = async () => {
-    setForTrade((prev) => !prev);
+    if (forTrade) {
+      setForTrade(false);
+      await toggleCarStatus(id, 'forTrade');
+      return;
+    }
+
+    setForTrade(true);
     await toggleCarStatus(id, 'forTrade');
+    setShowQuickTradeModal(true);
+  };
+
+  const handleQuickTradeSubmit = async (wantDescription: string) => {
+    const res = await fetch('/api/trading/offers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        offeredCarIds: [id],
+        wantDescription,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? 'Failed to post trade offer');
+    }
+
+    setShowQuickTradeModal(false);
+    router.push('/trading?tab=offers&sub=sent');
   };
 
   return (
@@ -117,28 +147,30 @@ export default function GarageCard({
         </div>
 
         {/* Action buttons */}
-        <div className="px-4 pb-4 flex gap-3">
-          <button
-            onClick={handleForSaleClick}
-            disabled={listingLoading}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 disabled:opacity-60 ${
-              forSale
-                ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
-                : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
-            }`}
-          >
-            For Sale
-          </button>
-          <button
-            onClick={handleToggleTrade}
-            className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 ${
-              forTrade
-                ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
-                : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
-            }`}
-          >
-            For Trade
-          </button>
+        <div className="px-4 pb-4 space-y-2">
+          <div className="flex gap-3">
+            <button
+              onClick={handleForSaleClick}
+              disabled={listingLoading}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 disabled:opacity-60 ${
+                forSale
+                  ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
+                  : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
+              }`}
+            >
+              For Sale
+            </button>
+            <button
+              onClick={handleToggleTrade}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold border transition-all duration-200 ${
+                forTrade
+                  ? 'bg-green-600 border-green-500 text-white shadow-[0_0_14px_rgba(34,197,94,0.35)]'
+                  : 'bg-red-600 border-red-500 text-white hover:bg-red-700'
+              }`}
+            >
+              For Trade
+            </button>
+          </div>
         </div>
       </div>
 
@@ -148,6 +180,13 @@ export default function GarageCard({
           onConfirm={handleConfirmPrice}
           onClose={() => setShowPriceModal(false)}
           loading={listingLoading}
+        />
+      )}
+
+      {showQuickTradeModal && (
+        <QuickTradeIntentModal
+          onClose={() => setShowQuickTradeModal(false)}
+          onSubmit={handleQuickTradeSubmit}
         />
       )}
     </>

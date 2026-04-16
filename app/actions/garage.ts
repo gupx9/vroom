@@ -67,12 +67,51 @@ export async function toggleCarStatus(carId: string, field: 'forSale' | 'forTrad
 
   if (!car) return { error: 'Car not found' };
 
+  const nextValue = !car[field];
+
+  if (field === 'forTrade' && !nextValue) {
+    await prisma.$transaction([
+      prisma.car.update({
+        where: { id: carId },
+        data: { forTrade: false },
+      }),
+      prisma.tradeOffer.updateMany({
+        where: {
+          AND: [
+            { status: 'pending' },
+            {
+              OR: [
+                { offererId: session.userId },
+                { receiverId: session.userId },
+              ],
+            },
+            {
+              OR: [
+                { offeredCarIds: { has: carId } },
+                { requestedCarIds: { has: carId } },
+              ],
+            },
+          ],
+        },
+        data: { status: 'cancelled' },
+      }),
+    ]);
+
+    revalidatePath('/garage');
+    revalidatePath('/trading');
+    return { success: true };
+  }
+
   await prisma.car.update({
     where: { id: carId },
-    data: { [field]: !car[field] },
+    data: { [field]: nextValue },
   });
 
   revalidatePath('/garage');
+  if (field === 'forSale') revalidatePath('/marketplace');
+  if (field === 'forTrade') revalidatePath('/trading');
+
+  return { success: true };
 }
 
 export async function toggleDioramaStatus(dioramaId: string, field: 'forSale' | 'forTrade') {
@@ -85,12 +124,51 @@ export async function toggleDioramaStatus(dioramaId: string, field: 'forSale' | 
 
   if (!diorama) return { error: 'Diorama not found' };
 
+  const nextValue = !diorama[field];
+
+  if (field === 'forTrade' && !nextValue) {
+    await prisma.$transaction([
+      prisma.diorama.update({
+        where: { id: dioramaId },
+        data: { forTrade: false },
+      }),
+      prisma.tradeOffer.updateMany({
+        where: {
+          AND: [
+            { status: 'pending' },
+            {
+              OR: [
+                { offererId: session.userId },
+                { receiverId: session.userId },
+              ],
+            },
+            {
+              OR: [
+                { offeredCarIds: { has: dioramaId } },
+                { requestedCarIds: { has: dioramaId } },
+              ],
+            },
+          ],
+        },
+        data: { status: 'cancelled' },
+      }),
+    ]);
+
+    revalidatePath('/garage');
+    revalidatePath('/trading');
+    return { success: true };
+  }
+
   await prisma.diorama.update({
     where: { id: dioramaId },
-    data: { [field]: !diorama[field] },
+    data: { [field]: nextValue },
   });
 
   revalidatePath('/garage');
+  if (field === 'forSale') revalidatePath('/marketplace');
+  if (field === 'forTrade') revalidatePath('/trading');
+
+  return { success: true };
 }
 
 export async function deleteCar(carId: string) {
