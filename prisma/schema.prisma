@@ -25,6 +25,9 @@ model User {
   reportsGiven     UserReport[] @relation("ReportAuthor")
   tradesSent       TradeOffer[] @relation("OffererTrades")
   tradesReceived   TradeOffer[] @relation("ReceiverTrades")
+  auctionsAsSeller Auction[]    @relation("AuctionSeller")
+  auctionsWon      Auction[]    @relation("AuctionWinner")
+  auctionBids      AuctionBid[] @relation("AuctionBidder")
 }
 
 model UserReview {
@@ -55,21 +58,58 @@ model UserReport {
 }
 
 model Car {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  imageData    String   @db.Text
-  brand        String   @default("")
-  carModel     String   @default("")
-  size         String   @default("1:64")
-  condition    String   @default("Intact")
-  price        Float    @default(0)
-  sellingPrice Float    @default(0)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageData    String    @db.Text
+  brand        String    @default("")
+  carModel     String    @default("")
+  size         String    @default("1:64")
+  condition    String    @default("Intact")
+  price        Float     @default(0)
+  sellingPrice Float     @default(0)
   description  String?
-  forSale      Boolean  @default(false)
-  forTrade     Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  forSale      Boolean   @default(false)
+  forTrade     Boolean   @default(false)
+  forAuction   Boolean   @default(false)
+  auctions     Auction[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Auction {
+  id          String       @id @default(uuid())
+  carId       String       
+  car         Car          @relation(fields: [carId], references: [id], onDelete: Cascade)
+  sellerId    String
+  seller      User         @relation("AuctionSeller", fields: [sellerId], references: [id])
+  startingBid Float
+  endsAt      DateTime
+  finalized   Boolean      @default(false)
+  winnerId    String?
+  winner      User?        @relation("AuctionWinner", fields: [winnerId], references: [id])
+  bids        AuctionBid[]
+  createdAt   DateTime     @default(now())
+
+  @@index([sellerId])
+  @@index([carId])
+  @@index([endsAt])
+  @@index([finalized])
+}
+
+model AuctionBid {
+  id        String   @id @default(uuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  bidderId  String
+  bidder    User     @relation("AuctionBidder", fields: [bidderId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([auctionId, bidderId])
+  @@index([auctionId])
+  @@index([bidderId])
 }
 
 model Diorama {
