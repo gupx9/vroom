@@ -405,9 +405,6 @@ export default function TradingClient({
 
   const currentSubOffers = offersSubData[offersSubTab];
 
-  // ── Suppressed userId warning ──
-  void userId;
-
   return (
     <div className="space-y-6">
       {/* Top bar: tabs + Post Offer button */}
@@ -562,17 +559,23 @@ export default function TradingClient({
             </div>
           ) : (
             <div className="space-y-3">
-              {currentSubOffers.map((offer) => (
+              {currentSubOffers.map((offer) => {
+                  const perspectiveForOffer: 'sent' | 'received' = offersSubTab === 'accepted'
+                    ? (offer.offerer.id === userId ? 'sent' : 'received')
+                    : (offersSubTab === 'received' ? 'received' : 'sent');
+
+                  return (
                 <OfferRow
                   key={offer.id}
                   offer={offer}
                   itemMap={itemMap}
-                  perspective={offersSubTab === 'received' ? 'received' : 'sent'}
+                  perspective={perspectiveForOffer}
                   onAccept={actionLoading ? undefined : handleAccept}
                   onReject={actionLoading ? undefined : handleReject}
                   onDelete={actionLoading ? undefined : handleDelete}
                 />
-              ))}
+                  );
+                })}
             </div>
           )}
         </div>
