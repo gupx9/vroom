@@ -28,6 +28,9 @@ model User {
   auctionsAsSeller Auction[]    @relation("AuctionSeller")
   auctionsWon      Auction[]    @relation("AuctionWinner")
   auctionBids      AuctionBid[] @relation("AuctionBidder")
+  communityMessages CommunityMessage[]
+  communityReplies  CommunityReply[]
+  communityReactions CommunityReaction[]
 }
 
 model UserReview {
@@ -182,4 +185,53 @@ model MarketplaceTransaction {
   @@index([sellerId, createdAt])
   @@index([status, createdAt])
   @@index([itemType, itemId])
+}
+
+model CommunityMessage {
+  id        String              @id @default(uuid())
+  content   String
+  authorId  String
+  author    User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies   CommunityReply[]
+  reactions CommunityReaction[]
+  deletedAt DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([authorId, createdAt])
+  @@index([createdAt])
+}
+
+model CommunityReply {
+  id        String              @id @default(uuid())
+  messageId String
+  message   CommunityMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  content   String
+  authorId  String
+  author    User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reactions CommunityReaction[]
+  deletedAt DateTime?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@index([messageId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model CommunityReaction {
+  id        String            @id @default(uuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId String?
+  message   CommunityMessage? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  replyId   String?
+  reply     CommunityReply?   @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  value     Int
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([userId, messageId])
+  @@unique([userId, replyId])
+  @@index([messageId, value])
+  @@index([replyId, value])
 }
