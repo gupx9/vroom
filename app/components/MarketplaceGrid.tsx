@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import MarketplaceCard from './MarketplaceCard';
 import AddSellPostModal from './AddSellPostModal';
+import TopSearchBar from './TopSearchBar';
 
 interface MarketplaceCar {
   id: string;
@@ -33,7 +34,29 @@ interface MarketplaceGridProps {
 
 export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: MarketplaceGridProps) {
   const [showSellModal, setShowSellModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const totalListings = cars.length + dioramas.length;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredCars = normalizedQuery
+    ? cars.filter((car) =>
+        [car.brand, car.carModel, car.size, car.condition, car.user.username]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : cars;
+
+  const filteredDioramas = normalizedQuery
+    ? dioramas.filter((diorama) =>
+        [diorama.description, diorama.user.username]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : dioramas;
+
+  const displayedListings = filteredCars.length + filteredDioramas.length;
 
   const isBanned = bannedUntil ? new Date(bannedUntil) > new Date() : false;
   const daysLeft = isBanned
@@ -42,6 +65,14 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
 
   return (
     <div>
+      <div className="mb-4">
+        <TopSearchBar
+          query={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search listings by item or seller"
+        />
+      </div>
+
       {/* Ban notice */}
       {isBanned && (
         <div className="mb-6 bg-red-950/40 border border-red-800/60 rounded-xl p-4 flex items-start gap-3">
@@ -62,7 +93,9 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
       {/* Top bar */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-zinc-500 text-sm">
-          {totalListings > 0 ? `${totalListings} listing${totalListings !== 1 ? 's' : ''} available` : 'No listings yet'}
+          {totalListings === 0
+            ? 'No listings yet'
+            : `${displayedListings} of ${totalListings} listing${totalListings !== 1 ? 's' : ''}`}
         </p>
         {!isBanned && (
           <button
@@ -91,14 +124,21 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
         </div>
       )}
 
+      {totalListings > 0 && displayedListings === 0 && (
+        <div className="pt-16 text-center text-zinc-600 py-20">
+          <p className="text-lg font-medium text-zinc-500">No listings match your search</p>
+          <p className="text-sm mt-1 text-zinc-600">Try searching with another item name or seller</p>
+        </div>
+      )}
+
       {/* Cars section */}
-      {cars.length > 0 && (
+      {filteredCars.length > 0 && (
         <div className="mb-8">
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">
-            Cars <span className="text-zinc-700">({cars.length})</span>
+            Cars <span className="text-zinc-700">({filteredCars.length})</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {cars.map((car) => (
+            {filteredCars.map((car) => (
               <MarketplaceCard
                 key={car.id}
                 id={car.id}
@@ -116,13 +156,13 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
       )}
 
       {/* Dioramas section */}
-      {dioramas.length > 0 && (
+      {filteredDioramas.length > 0 && (
         <div>
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">
-            Dioramas <span className="text-zinc-700">({dioramas.length})</span>
+            Dioramas <span className="text-zinc-700">({filteredDioramas.length})</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {dioramas.map((d) => (
+            {filteredDioramas.map((d) => (
               <MarketplaceCard
                 key={d.id}
                 id={d.id}

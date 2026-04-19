@@ -5,6 +5,7 @@ import GarageCard from './GarageCard';
 import DioramaCard from './DioramaCard';
 import AddCarModal from './AddCarModal';
 import AddDioramaModal from './AddDioramaModal';
+import TopSearchBar from './TopSearchBar';
 
 interface CarItem {
   id: string;
@@ -39,6 +40,7 @@ export default function GarageGrid({ cars, dioramas, totalWorth }: GarageGridPro
   const [showCarModal, setShowCarModal] = useState(false);
   const [showDioramaModal, setShowDioramaModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -53,9 +55,49 @@ export default function GarageGrid({ cars, dioramas, totalWorth }: GarageGridPro
   }, []);
 
   const totalItems = cars.length + dioramas.length;
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredCars = normalizedQuery
+    ? cars.filter((car) =>
+        [
+          car.brand,
+          car.carModel,
+          car.size,
+          car.condition,
+          car.forSale ? 'for sale' : 'not for sale',
+          car.forTrade ? 'for trade' : 'not for trade',
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : cars;
+
+  const filteredDioramas = normalizedQuery
+    ? dioramas.filter((diorama) =>
+        [
+          diorama.description,
+          diorama.forSale ? 'for sale' : 'not for sale',
+          diorama.forTrade ? 'for trade' : 'not for trade',
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : dioramas;
+
+  const displayedTotalItems = filteredCars.length + filteredDioramas.length;
 
   return (
     <div>
+      <div className="mb-4">
+        <TopSearchBar
+          query={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search cars and dioramas"
+        />
+      </div>
+
       {/* Top bar — Update Garage button + Total Worth */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         {/* Update Garage dropdown */}
@@ -124,14 +166,21 @@ export default function GarageGrid({ cars, dioramas, totalWorth }: GarageGridPro
         </div>
       )}
 
+      {totalItems > 0 && displayedTotalItems === 0 && (
+        <div className="text-center py-20 text-zinc-600">
+          <p className="text-lg font-medium text-zinc-500">No items match your search</p>
+          <p className="text-sm mt-1 text-zinc-600">Try a different car model, size, or status</p>
+        </div>
+      )}
+
       {/* Cars section */}
-      {cars.length > 0 && (
+      {filteredCars.length > 0 && (
         <div className="mb-8">
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">
-            Cars <span className="text-zinc-700">({cars.length})</span>
+            Cars <span className="text-zinc-700">({filteredCars.length})</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {cars.map((car) => (
+            {filteredCars.map((car) => (
               <GarageCard key={car.id} {...car} />
             ))}
           </div>
@@ -139,13 +188,13 @@ export default function GarageGrid({ cars, dioramas, totalWorth }: GarageGridPro
       )}
 
       {/* Dioramas section */}
-      {dioramas.length > 0 && (
+      {filteredDioramas.length > 0 && (
         <div>
           <h3 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">
-            Dioramas <span className="text-zinc-700">({dioramas.length})</span>
+            Dioramas <span className="text-zinc-700">({filteredDioramas.length})</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {dioramas.map((d) => (
+            {filteredDioramas.map((d) => (
               <DioramaCard key={d.id} {...d} />
             ))}
           </div>

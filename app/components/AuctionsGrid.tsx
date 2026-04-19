@@ -4,6 +4,7 @@ import { useState } from "react";
 import AuctionCard from "./AuctionCard";
 import CreateAuctionModal from "./CreateAuctionModal";
 import type { AuctionListItem } from "@/app/actions/auctions";
+import TopSearchBar from "./TopSearchBar";
 
 interface AuctionsGridProps {
   auctions: AuctionListItem[];
@@ -15,6 +16,24 @@ export default function AuctionsGrid({
   bannedUntil,
 }: AuctionsGridProps) {
   const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredAuctions = normalizedQuery
+    ? auctions.filter((auction) =>
+        [
+          auction.car.brand,
+          auction.car.carModel,
+          auction.car.size,
+          auction.car.condition,
+          auction.car.description ?? "",
+          auction.seller.username,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : auctions;
 
   const isBanned = bannedUntil ? new Date(bannedUntil) > new Date() : false;
   const daysLeft = isBanned
@@ -29,6 +48,14 @@ export default function AuctionsGrid({
 
   return (
     <div>
+      <div className="mb-4">
+        <TopSearchBar
+          query={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search auctions by car or seller"
+        />
+      </div>
+
       {/* Ban notice */}
       {isBanned && (
         <div className="mb-6 bg-red-950/40 border border-red-800/60 rounded-xl p-4 flex items-start gap-3">
@@ -66,7 +93,7 @@ export default function AuctionsGrid({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <p className="text-zinc-500 text-sm">
           {auctions.length > 0
-            ? `${auctions.length} active auction${auctions.length !== 1 ? "s" : ""}`
+            ? `${filteredAuctions.length} of ${auctions.length} active auction${auctions.length !== 1 ? "s" : ""}`
             : "No active auctions"}
         </p>
         {!isBanned && (
@@ -124,10 +151,17 @@ export default function AuctionsGrid({
         </div>
       )}
 
+      {auctions.length > 0 && filteredAuctions.length === 0 && (
+        <div className="pt-16 text-center text-zinc-600 py-20">
+          <p className="text-lg font-medium text-zinc-500">No auctions match your search</p>
+          <p className="text-sm mt-1 text-zinc-600">Try a different car brand, model, or seller</p>
+        </div>
+      )}
+
       {/* Grid */}
-      {auctions.length > 0 && (
+      {filteredAuctions.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {auctions.map((auction) => (
+          {filteredAuctions.map((auction) => (
             <AuctionCard key={auction.id} auction={auction} />
           ))}
         </div>
