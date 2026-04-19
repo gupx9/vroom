@@ -154,3 +154,32 @@ model TradeOffer {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model MarketplaceTransaction {
+  id                String   @id @default(uuid())
+  externalTxnId     String   @unique
+  itemType          String
+  itemId            String
+  sellerId          String
+  buyerId           String
+  paymentMethod     String
+  status            String   @default("initiated")
+  amount            Float
+  customerName      String
+  customerEmail     String
+  customerPhone     String
+  shippingAddress   String?
+  shippingCity      String?
+  shippingPostcode  String?
+  gatewayUrl        String?
+  gatewayPayload    Json?
+  sslValidationId   String?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([status, createdAt])
+  @@index([itemType, itemId])
+}

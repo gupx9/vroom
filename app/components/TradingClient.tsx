@@ -5,6 +5,7 @@ import Link from "next/link";
 import TradeOfferComposerModal, {
   ComposerItem,
 } from "./TradeOfferComposerModal";
+import TopSearchBar from "./TopSearchBar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -433,6 +434,7 @@ export default function TradingClient({
   initialOffersSubTab = "received",
 }: TradingClientProps) {
   const [activeTab, setActiveTab] = useState<"browse" | "offers">(initialTab);
+  const [searchQuery, setSearchQuery] = useState("");
   const [offersSubTab, setOffersSubTab] = useState<
     "received" | "sent" | "accepted"
   >(initialOffersSubTab);
@@ -551,6 +553,26 @@ export default function TradingClient({
       ? listings
       : listings.filter((l) => l.type === listingsTypeFilter);
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredDisplayedListings = normalizedQuery
+    ? displayedListings.filter((item) => {
+        const text =
+          item.type === "car"
+            ? [
+                item.brand,
+                item.carModel,
+                item.size,
+                item.condition,
+                item.user.username,
+                item.description ?? "",
+              ]
+                .join(" ")
+                .toLowerCase()
+            : [item.description, item.user.username].join(" ").toLowerCase();
+        return text.includes(normalizedQuery);
+      })
+    : displayedListings;
+
   const pendingReceived = receivedOffers.filter((o) => o.status === "pending");
   const pendingSent = sentOffers.filter((o) => o.status === "pending");
   const acceptedAll = [
@@ -567,6 +589,43 @@ export default function TradingClient({
   };
 
   const currentSubOffers = offersSubData[offersSubTab];
+  const currentSubOffersFiltered = normalizedQuery
+    ? currentSubOffers.filter((offer) => {
+        const offeredItems = offer.offeredCarIds
+          .map((id) => {
+            const item = itemMap[id];
+            if (!item) return "";
+            return item.type === "car"
+              ? `${item.brand} ${item.carModel}`
+              : item.description;
+          })
+          .join(" ");
+
+        const requestedItems = offer.requestedCarIds
+          .map((id) => {
+            const item = itemMap[id];
+            if (!item) return "";
+            return item.type === "car"
+              ? `${item.brand} ${item.carModel}`
+              : item.description;
+          })
+          .join(" ");
+
+        const searchBlob = [
+          offer.offerer.username,
+          offer.receiver?.username ?? "",
+          offer.message ?? "",
+          offer.wantDescription ?? "",
+          offer.status,
+          offeredItems,
+          requestedItems,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return searchBlob.includes(normalizedQuery);
+      })
+    : currentSubOffers;
 
   // ── Suppressed userId warning ──
   void userId;
@@ -618,6 +677,16 @@ export default function TradingClient({
         </button>
       </div>
 
+      <TopSearchBar
+        query={searchQuery}
+        onChange={setSearchQuery}
+        placeholder={
+          activeTab === "browse"
+            ? "Search listings by item or trader"
+            : "Search offers by user, item, or message"
+        }
+      />
+
       {/* ── Browse Tab ── */}
       {activeTab === "browse" && (
         <div className="space-y-4">
@@ -655,7 +724,7 @@ export default function TradingClient({
                 </div>
               ))}
             </div>
-          ) : displayedListings.length === 0 ? (
+          ) : filteredDisplayedListings.length === 0 ? (
             <div className="py-24 text-center space-y-3">
               <svg
                 className="mx-auto opacity-30"
@@ -675,16 +744,19 @@ export default function TradingClient({
                 <path d="M20 17H4" />
               </svg>
               <p className="text-zinc-500 text-lg font-medium">
-                No trade listings yet
+                {displayedListings.length === 0
+                  ? "No trade listings yet"
+                  : "No trade listings match your search"}
               </p>
               <p className="text-zinc-600 text-sm">
-                Be the first — mark items as &ldquo;For Trade&rdquo; in your
-                garage.
+                {displayedListings.length === 0
+                  ? "Be the first — mark items as &ldquo;For Trade&rdquo; in your garage."
+                  : "Try a different item name, seller, or condition."}
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {displayedListings.map((item) => (
+              {filteredDisplayedListings.map((item) => (
                 <ListingCard
                   key={item.id}
                   item={item}
@@ -763,7 +835,7 @@ export default function TradingClient({
                 </div>
               ))}
             </div>
-          ) : currentSubOffers.length === 0 ? (
+          ) : currentSubOffersFiltered.length === 0 ? (
             <div className="py-16 text-center space-y-2">
               <svg
                 className="mx-auto opacity-30 mb-3"
@@ -783,17 +855,18 @@ export default function TradingClient({
                 <path d="M20 17H4" />
               </svg>
               <p className="text-zinc-500 font-medium">
-                {offersSubTab === "received" && "No pending offers received"}
-                {offersSubTab === "sent" && "No pending offers sent"}
-                {offersSubTab === "accepted" && "No accepted trades yet"}
+                {currentSubOffers.length === 0 && offersSubTab === "received" && "No pending offers received"}
+                {currentSubOffers.length === 0 && offersSubTab === "sent" && "No pending offers sent"}
+                {currentSubOffers.length === 0 && offersSubTab === "accepted" && "No accepted trades yet"}
+                {currentSubOffers.length > 0 && "No offers match your search"}
               </p>
-              {offersSubTab === "received" && (
+              {currentSubOffers.length === 0 && offersSubTab === "received" && (
                 <p className="text-zinc-600 text-sm">
                   When someone makes an offer on your items, it&apos;ll appear
                   here.
                 </p>
               )}
-              {offersSubTab === "sent" && (
+              {currentSubOffers.length === 0 && offersSubTab === "sent" && (
                 <p className="text-zinc-600 text-sm">
                   Browse listings and click &ldquo;Make Offer&rdquo; to send a
                   trade proposal.
@@ -802,7 +875,7 @@ export default function TradingClient({
             </div>
           ) : (
             <div className="space-y-3">
-              {currentSubOffers.map((offer) => (
+              {currentSubOffersFiltered.map((offer) => (
                 <OfferRow
                   key={offer.id}
                   offer={offer}

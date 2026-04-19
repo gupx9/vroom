@@ -10,6 +10,7 @@ import {
   banUser,
   unbanUser,
 } from '@/app/actions/admin';
+import TopSearchBar from './TopSearchBar';
 
 interface ReportItem {
   id: string;
@@ -178,8 +179,33 @@ function BanModal({
 export default function ModerationPanel({ reports, reviews }: ModerationPanelProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'reports' | 'reviews'>('reports');
+  const [searchQuery, setSearchQuery] = useState('');
   const [banTarget, setBanTarget] = useState<{ id: string; username: string; bannedUntil: Date | null } | null>(null);
   const [, startTransition] = useTransition();
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredReports = normalizedQuery
+    ? reports.filter((report) =>
+        [report.author.username, report.target.username, report.reason]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : reports;
+
+  const filteredReviews = normalizedQuery
+    ? reviews.filter((review) =>
+        [
+          review.author.username,
+          review.target.username,
+          review.comment ?? '',
+          `${review.stars} star`,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(normalizedQuery),
+      )
+    : reviews;
 
   const refresh = () => router.refresh();
 
@@ -204,21 +230,29 @@ export default function ModerationPanel({ reports, reviews }: ModerationPanelPro
 
   return (
     <div>
+      <div className="mb-4">
+        <TopSearchBar
+          query={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by username, reason, or review"
+        />
+      </div>
+
       {/* Tabs */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => setActiveTab('reports')} className={tabClass('reports')}>
           Reports
-          {reports.length > 0 && (
+          {filteredReports.length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-700 text-white text-[10px] font-bold">
-              {reports.length}
+              {filteredReports.length}
             </span>
           )}
         </button>
         <button onClick={() => setActiveTab('reviews')} className={tabClass('reviews')}>
           Low Reviews
-          {reviews.length > 0 && (
+          {filteredReviews.length > 0 && (
             <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-700 text-white text-[10px] font-bold">
-              {reviews.length}
+              {filteredReviews.length}
             </span>
           )}
         </button>
@@ -227,15 +261,15 @@ export default function ModerationPanel({ reports, reviews }: ModerationPanelPro
       {/* ── REPORTS ── */}
       {activeTab === 'reports' && (
         <div className="space-y-4">
-          {reports.length === 0 && (
+          {filteredReports.length === 0 && (
             <div className="py-16 text-center text-zinc-600">
               <svg className="mx-auto mb-3 opacity-30" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              <p className="text-zinc-500 font-medium">No pending reports</p>
+              <p className="text-zinc-500 font-medium">{reports.length === 0 ? 'No pending reports' : 'No reports match your search'}</p>
             </div>
           )}
-          {reports.map((r) => {
+          {filteredReports.map((r) => {
             const isBanned = r.target.bannedUntil && new Date(r.target.bannedUntil) > new Date();
             return (
               <div key={r.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
@@ -298,15 +332,15 @@ export default function ModerationPanel({ reports, reviews }: ModerationPanelPro
       {/* ── LOW REVIEWS ── */}
       {activeTab === 'reviews' && (
         <div className="space-y-4">
-          {reviews.length === 0 && (
+          {filteredReviews.length === 0 && (
             <div className="py-16 text-center text-zinc-600">
               <svg className="mx-auto mb-3 opacity-30" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
-              <p className="text-zinc-500 font-medium">No pending low reviews</p>
+              <p className="text-zinc-500 font-medium">{reviews.length === 0 ? 'No pending low reviews' : 'No reviews match your search'}</p>
             </div>
           )}
-          {reviews.map((rv) => (
+          {filteredReviews.map((rv) => (
             <div key={rv.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="space-y-1.5 flex-1">
