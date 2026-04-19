@@ -19,3 +19,10 @@ everyone else:
 git pull
 npx prisma migrate dev
 npx prisma generate
+
+Environment variables for SSLCommerz sandbox purchase flow:
+SSLCOMMERZ_STORE_ID=your_sandbox_store_id
+SSLCOMMERZ_STORE_PASSWORD=your_sandbox_store_password
+
+# Optional, defaults to current request origin
+SSLCOMMERZ_CALLBACK_BASE_URL=http://localhost:1006

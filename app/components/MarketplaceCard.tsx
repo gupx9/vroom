@@ -11,6 +11,7 @@ interface MarketplaceCardProps {
   condition?: string;
   sellingPrice: number;
   sellerUsername: string;
+  onOpenDetails?: () => void;
 }
 
 export default function MarketplaceCard({
@@ -20,9 +21,21 @@ export default function MarketplaceCard({
   condition,
   sellingPrice,
   sellerUsername,
+  onOpenDetails,
 }: MarketplaceCardProps) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-lg hover:border-zinc-600 hover:shadow-red-900/10 transition-all duration-200 flex flex-col group">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpenDetails}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpenDetails?.();
+        }
+      }}
+      className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden shadow-lg hover:border-zinc-600 hover:shadow-red-900/10 transition-all duration-200 flex flex-col group"
+    >
       {/* Image */}
       <div className="aspect-video overflow-hidden bg-zinc-950 relative">
         {imageData ? (

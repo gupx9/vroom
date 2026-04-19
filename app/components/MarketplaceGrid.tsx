@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MarketplaceCard from './MarketplaceCard';
 import AddSellPostModal from './AddSellPostModal';
 import TopSearchBar from './TopSearchBar';
+import MarketplacePurchaseModal from './MarketplacePurchaseModal';
 
 interface MarketplaceCar {
   id: string;
@@ -34,6 +35,17 @@ interface MarketplaceGridProps {
 
 export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: MarketplaceGridProps) {
   const [showSellModal, setShowSellModal] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [selectedItem, setSelectedItem] = useState<{
+    id: string;
+    type: 'car' | 'diorama';
+    imageData: string | null;
+    title: string;
+    subtitle?: string;
+    condition?: string;
+    sellingPrice: number;
+    sellerUsername: string;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const totalListings = cars.length + dioramas.length;
   const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -58,9 +70,17 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
 
   const displayedListings = filteredCars.length + filteredDioramas.length;
 
-  const isBanned = bannedUntil ? new Date(bannedUntil) > new Date() : false;
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const isBanned = bannedUntil ? new Date(bannedUntil).getTime() > nowMs : false;
   const daysLeft = isBanned
-    ? Math.max(1, Math.ceil((new Date(bannedUntil!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(1, Math.ceil((new Date(bannedUntil!).getTime() - nowMs) / (1000 * 60 * 60 * 24)))
     : 0;
 
   return (
@@ -149,6 +169,18 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
                 condition={car.condition}
                 sellingPrice={car.sellingPrice}
                 sellerUsername={car.user.username}
+                onOpenDetails={() =>
+                  setSelectedItem({
+                    id: car.id,
+                    type: 'car',
+                    imageData: car.imageData,
+                    title: car.brand,
+                    subtitle: car.carModel,
+                    condition: car.condition,
+                    sellingPrice: car.sellingPrice,
+                    sellerUsername: car.user.username,
+                  })
+                }
               />
             ))}
           </div>
@@ -171,6 +203,16 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
                 title={d.description}
                 sellingPrice={d.sellingPrice}
                 sellerUsername={d.user.username}
+                onOpenDetails={() =>
+                  setSelectedItem({
+                    id: d.id,
+                    type: 'diorama',
+                    imageData: d.imageData,
+                    title: d.description,
+                    sellingPrice: d.sellingPrice,
+                    sellerUsername: d.user.username,
+                  })
+                }
               />
             ))}
           </div>
@@ -179,6 +221,12 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
 
       {/* Add Sell Post Modal */}
       {showSellModal && <AddSellPostModal onClose={() => setShowSellModal(false)} />}
+
+      <MarketplacePurchaseModal
+        open={!!selectedItem}
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+      />
     </div>
   );
 }
