@@ -308,7 +308,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     // Only the offerer or receiver may view the offer details
-    if (offer.offerer.id !== session.userId && offer.receiver.id !== session.userId) {
+    if (offer.offerer.id !== session.userId && offer.receiver?.id !== session.userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 

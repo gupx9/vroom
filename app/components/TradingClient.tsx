@@ -887,8 +887,7 @@ export default function TradingClient({
                   onReject={actionLoading ? undefined : handleReject}
                   onDelete={actionLoading ? undefined : handleDelete}
                 />
-                  );
-                })}
+              ))}
             </div>
           )}
         </div>
