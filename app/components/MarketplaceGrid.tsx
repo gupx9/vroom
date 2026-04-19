@@ -36,6 +36,10 @@ interface MarketplaceGridProps {
 export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: MarketplaceGridProps) {
   const [showSellModal, setShowSellModal] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [typeFilter, setTypeFilter] = useState<'all' | 'car' | 'diorama'>('all');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [priceSort, setPriceSort] = useState<'none' | 'price_asc' | 'price_desc'>('none');
   const [selectedItem, setSelectedItem] = useState<{
     id: string;
     type: 'car' | 'diorama';
@@ -49,8 +53,28 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
   const [searchQuery, setSearchQuery] = useState('');
   const totalListings = cars.length + dioramas.length;
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const parsedMinPrice = minPrice.trim() === '' ? null : Number(minPrice);
+  const parsedMaxPrice = maxPrice.trim() === '' ? null : Number(maxPrice);
+  const hasValidMinPrice = parsedMinPrice !== null && !Number.isNaN(parsedMinPrice);
+  const hasValidMaxPrice = parsedMaxPrice !== null && !Number.isNaN(parsedMaxPrice);
 
-  const filteredCars = normalizedQuery
+  const isWithinPriceRange = (price: number) => {
+    if (hasValidMinPrice && price < parsedMinPrice!) return false;
+    if (hasValidMaxPrice && price > parsedMaxPrice!) return false;
+    return true;
+  };
+
+  const sortByPrice = <T extends { sellingPrice: number }>(items: T[]) => {
+    if (priceSort === 'none') return items;
+    return [...items].sort((a, b) =>
+      priceSort === 'price_asc' ? a.sellingPrice - b.sellingPrice : b.sellingPrice - a.sellingPrice,
+    );
+  };
+
+  const showCars = typeFilter === 'all' || typeFilter === 'car';
+  const showDioramas = typeFilter === 'all' || typeFilter === 'diorama';
+
+  const searchedCars = normalizedQuery
     ? cars.filter((car) =>
         [car.brand, car.carModel, car.size, car.condition, car.user.username]
           .join(' ')
@@ -59,7 +83,7 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
       )
     : cars;
 
-  const filteredDioramas = normalizedQuery
+  const searchedDioramas = normalizedQuery
     ? dioramas.filter((diorama) =>
         [diorama.description, diorama.user.username]
           .join(' ')
@@ -67,6 +91,13 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
           .includes(normalizedQuery),
       )
     : dioramas;
+
+  const filteredCars = sortByPrice(
+    showCars ? searchedCars.filter((car) => isWithinPriceRange(car.sellingPrice)) : [],
+  );
+  const filteredDioramas = sortByPrice(
+    showDioramas ? searchedDioramas.filter((diorama) => isWithinPriceRange(diorama.sellingPrice)) : [],
+  );
 
   const displayedListings = filteredCars.length + filteredDioramas.length;
 
@@ -91,6 +122,75 @@ export default function MarketplaceGrid({ cars, dioramas, bannedUntil }: Marketp
           onChange={setSearchQuery}
           placeholder="Search listings by item or seller"
         />
+      </div>
+
+      <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Type</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as 'all' | 'car' | 'diorama')}
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+            >
+              <option value="all">All Types</option>
+              <option value="car">Cars</option>
+              <option value="diorama">Dioramas</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Min Price (৳)</label>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="0"
+              className="w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Max Price (৳)</label>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Any"
+              className="w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Sort By</label>
+            <select
+              value={priceSort}
+              onChange={(e) => setPriceSort(e.target.value as 'none' | 'price_asc' | 'price_desc')}
+              className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:outline-none focus:border-red-500"
+            >
+              <option value="none">Default</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setTypeFilter('all');
+              setMinPrice('');
+              setMaxPrice('');
+              setPriceSort('none');
+            }}
+            className="ml-auto rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-800 transition-colors"
+          >
+            Reset Filters
+          </button>
+        </div>
       </div>
 
       {/* Ban notice */}
