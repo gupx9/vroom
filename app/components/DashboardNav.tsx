@@ -8,6 +8,7 @@ const navItems = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/trading', label: 'Trading' },
   { href: '/auctions', label: 'Auctions' },
+  { href: '/community', label: 'Community' },
 ];
 
 export default function DashboardNav({ isAdmin = false }: { isAdmin?: boolean }) {

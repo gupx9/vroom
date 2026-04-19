@@ -71,6 +71,7 @@ export default async function DashboardPage() {
             { href: '/marketplace', label: 'Marketplace', desc: 'Buy & sell listings', active: false },
             { href: '/trading', label: 'Trading', desc: 'Propose car trades', active: false },
             { href: '/auctions', label: 'Auctions', desc: 'Bid on vehicles', active: false },
+            { href: '/community', label: 'Community Chat', desc: 'Talk with all collectors', active: true },
           ].map((item) => (
             <Link
               key={item.href}
