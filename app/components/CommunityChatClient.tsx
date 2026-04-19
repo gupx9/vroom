@@ -549,7 +549,7 @@ export default function CommunityChatClient() {
       </section>
 
       {activeProfileUsername && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 pt-40">
+        <div className="fixed inset-0 z-[200] flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 pt-32">
           <div className="flex h-[calc(100dvh-11rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl">
             <div className="shrink-0 flex items-center justify-between border-b border-zinc-800 bg-zinc-900 px-5 py-4">
               <h2 className="text-lg font-bold text-white">User Profile</h2>

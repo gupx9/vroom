@@ -44,10 +44,10 @@ export default function AddDioramaModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="relative bg-zinc-950 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-4 pt-32 bg-black/70 backdrop-blur-sm">
+      <div className="relative flex w-full max-w-md max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950">
           <h2 className="text-lg font-bold text-white">Add Diorama to Garage</h2>
           <button
             onClick={onClose}
@@ -60,7 +60,7 @@ export default function AddDioramaModal({ onClose }: Props) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto p-6 space-y-4">
           {/* Optional image upload */}
           <div>
             <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">

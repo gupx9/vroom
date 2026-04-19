@@ -24,8 +24,9 @@ export default function SetPriceModal({ itemName, onConfirm, onClose, loading }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4 pt-32">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl w-full max-w-sm max-h-[calc(100dvh-6rem)] overflow-hidden flex flex-col">
+        <div className="shrink-0 p-6 pb-5 space-y-5">
         <div>
           <h2 className="text-white text-lg font-bold">Set Selling Price</h2>
           <p className="text-zinc-400 text-sm mt-1">
@@ -67,6 +68,7 @@ export default function SetPriceModal({ itemName, onConfirm, onClose, loading }:
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -47,10 +47,10 @@ export default function PlaceBidModal({ auctionId, currentTopBid, myCurrentBid, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4 pt-32">
+      <div className="flex w-full max-w-sm max-h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900">
           <div>
             <h2 className="text-white text-lg font-bold">
               {myCurrentBid ? 'Raise Your Bid' : 'Place a Bid'}
@@ -71,7 +71,7 @@ export default function PlaceBidModal({ auctionId, currentTopBid, myCurrentBid, 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {/* Current top bid info */}
           <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4 flex items-center justify-between">
             <span className="text-zinc-400 text-sm">Current top bid</span>
