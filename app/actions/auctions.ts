@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
@@ -209,7 +210,42 @@ export async function getAuctionDetail(auctionId: string): Promise<
   const session = await verifySession();
   if (!session?.userId) return { error: 'Not authenticated' };
 
-  let auction = await prisma.auction.findUnique({
+  let auction = await fetchAuctionDetailRecord(auctionId);
+
+  if (!auction) return { error: 'Auction not found' };
+
+  // Finalize if expired and not yet finalized
+  if (!auction.finalized && new Date() >= auction.endsAt) {
+    const finalized = await finalizeAuctionById(auctionId);
+    if (finalized) {
+      auction = finalized.auction;
+    }
+    if (!auction) return { error: 'Auction not found' };
+  }
+
+  const myBid = auction.bids.find((b) => b.bidderId === session.userId)?.amount ?? null;
+
+  return {
+    auction: {
+      id: auction.id,
+      carId: auction.carId,
+      startingBid: auction.startingBid,
+      endsAt: auction.endsAt.toISOString(),
+      finalized: auction.finalized,
+      sellerId: auction.sellerId,
+      winnerId: auction.winnerId,
+      car: auction.car,
+      seller: auction.seller,
+      winner: auction.winner,
+      bids: auction.bids,
+      myBid,
+    },
+    currentUserId: session.userId,
+  };
+}
+
+async function fetchAuctionDetailRecord(auctionId: string) {
+  return prisma.auction.findUnique({
     where: { id: auctionId },
     select: {
       id: true,
@@ -244,95 +280,137 @@ export async function getAuctionDetail(auctionId: string): Promise<
       },
     },
   });
+}
 
-  if (!auction) return { error: 'Auction not found' };
+export async function finalizeAuctionById(auctionId: string) {
+  const auction = await fetchAuctionDetailRecord(auctionId);
 
-  // Finalize if expired and not yet finalized
-  if (!auction.finalized && new Date() >= auction.endsAt) {
-    const topBid = auction.bids[0];
-    const updates: Parameters<typeof prisma.auction.update>[0]['data'] = {
-      finalized: true,
-    };
-
-    if (topBid) {
-      updates.winnerId = topBid.bidderId;
-      // Transfer car to winner
-      await prisma.$transaction([
-        prisma.auction.update({ where: { id: auctionId }, data: updates }),
-        prisma.car.update({
-          where: { id: auction.carId },
-          data: { userId: topBid.bidderId, forAuction: false },
-        }),
-      ]);
-    } else {
-      // No bids — just finalize and reset car flag
-      await prisma.$transaction([
-        prisma.auction.update({ where: { id: auctionId }, data: updates }),
-        prisma.car.update({
-          where: { id: auction.carId },
-          data: { forAuction: false },
-        }),
-      ]);
-    }
-
-    // Re-fetch updated auction
-    auction = await prisma.auction.findUnique({
-      where: { id: auctionId },
-      select: {
-        id: true,
-        carId: true,
-        startingBid: true,
-        endsAt: true,
-        finalized: true,
-        sellerId: true,
-        winnerId: true,
-        seller: { select: { username: true } },
-        winner: { select: { username: true } },
-        car: {
-          select: {
-            id: true,
-            imageData: true,
-            brand: true,
-            carModel: true,
-            size: true,
-            condition: true,
-            description: true,
-            price: true,
-          },
-        },
-        bids: {
-          select: {
-            id: true,
-            bidderId: true,
-            amount: true,
-            bidder: { select: { username: true } },
-          },
-          orderBy: { amount: 'desc' },
-        },
-      },
-    });
-    if (!auction) return { error: 'Auction not found' };
+  if (!auction) {
+    return null;
   }
 
-  const myBid = auction.bids.find((b) => b.bidderId === session.userId)?.amount ?? null;
+  if (auction.finalized || new Date() < auction.endsAt) {
+    return { auction, finalized: false } as const;
+  }
 
-  return {
-    auction: {
-      id: auction.id,
-      carId: auction.carId,
-      startingBid: auction.startingBid,
-      endsAt: auction.endsAt.toISOString(),
-      finalized: auction.finalized,
-      sellerId: auction.sellerId,
-      winnerId: auction.winnerId,
-      car: auction.car,
-      seller: auction.seller,
-      winner: auction.winner,
-      bids: auction.bids,
-      myBid,
-    },
-    currentUserId: session.userId,
-  };
+  const topBid = auction.bids[0];
+  const notifications = buildAuctionResultNotifications(auction, topBid?.bidderId ?? null, topBid?.amount ?? null);
+
+  if (topBid) {
+    await prisma.$transaction([
+      prisma.auction.update({
+        where: { id: auctionId },
+        data: {
+          finalized: true,
+          winnerId: topBid.bidderId,
+        },
+      }),
+      prisma.car.update({
+        where: { id: auction.carId },
+        data: { userId: topBid.bidderId, forAuction: false },
+      }),
+    ]);
+  } else {
+    await prisma.$transaction([
+      prisma.auction.update({
+        where: { id: auctionId },
+        data: { finalized: true },
+      }),
+      prisma.car.update({
+        where: { id: auction.carId },
+        data: { forAuction: false },
+      }),
+    ]);
+  }
+
+  await persistAuctionNotifications(notifications);
+
+  const finalizedAuction = await fetchAuctionDetailRecord(auctionId);
+
+  return finalizedAuction
+    ? ({ auction: finalizedAuction, finalized: true } as const)
+    : null;
+}
+
+async function persistAuctionNotifications(
+  notifications: ReturnType<typeof buildAuctionResultNotifications>,
+) {
+  if (notifications.length === 0) {
+    return;
+  }
+
+  try {
+    await prisma.notification.createMany({
+      data: notifications,
+      skipDuplicates: true,
+    });
+  } catch (error) {
+    // Notification delivery should never block finalizing auction ownership transfer.
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      (error.code !== 'P2021' && error.code !== 'P2022')
+    ) {
+      throw error;
+    }
+  }
+}
+
+function buildAuctionResultNotifications(
+  auction: Awaited<ReturnType<typeof fetchAuctionDetailRecord>>,
+  winnerId: string | null,
+  winningAmount: number | null,
+) {
+  if (!auction) {
+    return [];
+  }
+
+  const participantIds = new Set<string>([
+    auction.sellerId,
+    ...auction.bids.map((bid) => bid.bidderId),
+  ]);
+
+  return Array.from(participantIds).map((userId) => {
+    const isSeller = userId === auction.sellerId;
+    const isWinner = winnerId !== null && userId === winnerId;
+
+    let title = `Auction ended: ${auction.car.brand} ${auction.car.carModel}`;
+    let body = 'The auction has finished.';
+
+    if (winnerId) {
+      const winnerUsername = auction.winner?.username ?? 'the winner';
+
+      if (isWinner) {
+        title = `You won: ${auction.car.brand} ${auction.car.carModel}`;
+        body = winningAmount
+          ? `You won the auction with a bid of ৳${winningAmount.toLocaleString()}. The car has been moved to your garage.`
+          : 'You won the auction. The car has been moved to your garage.';
+      } else if (isSeller) {
+        title = `Your auction ended: ${auction.car.brand} ${auction.car.carModel}`;
+        body = winningAmount
+          ? `${winnerUsername} won your auction with ৳${winningAmount.toLocaleString()}. The car has been moved to their garage.`
+          : `${winnerUsername} won your auction. The car has been moved to their garage.`;
+      } else {
+        title = `Auction ended: ${auction.car.brand} ${auction.car.carModel}`;
+        body = winningAmount
+          ? `${winnerUsername} won the auction with ৳${winningAmount.toLocaleString()}.`
+          : `${winnerUsername} won the auction.`;
+      }
+    } else if (isSeller) {
+      title = `Auction ended with no bids: ${auction.car.brand} ${auction.car.carModel}`;
+      body = 'No one bid on your auction. The car has returned to your garage.';
+    } else {
+      title = `Auction ended: ${auction.car.brand} ${auction.car.carModel}`;
+      body = 'The auction ended with no bids.';
+    }
+
+    return {
+      userId,
+      auctionId: auction.id,
+      kind: 'auction_result',
+      title,
+      body,
+    };
+  });
 }
 
 // ─── Place / raise a bid ──────────────────────────────────────────────────────

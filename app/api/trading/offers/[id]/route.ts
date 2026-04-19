@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
+import { Prisma } from '@prisma/client';
 
 interface UpdateTradeOfferBody {
   action?: 'accept' | 'reject' | 'cancel';
@@ -37,6 +38,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         status: true,
         offeredCarIds: true,
         requestedCarIds: true,
+        offerer: { select: { username: true } },
+        receiver: { select: { username: true } },
       },
     });
 
@@ -67,6 +70,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     let updated;
+    let notifications: Array<{
+      userId: string;
+      auctionId: string;
+      kind: string;
+      title: string;
+      body: string;
+    }> = [];
 
     if (action === 'accept') {
       if (offer.requestedCarIds.length === 0) {
@@ -178,6 +188,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           select: { id: true, status: true, updatedAt: true },
         });
       });
+
+      notifications = [
+        {
+          userId: offer.offererId,
+          auctionId: offer.id,
+          kind: 'trade_offer_accepted',
+          title: 'Your trade offer was accepted',
+          body: offer.receiver
+            ? `@${offer.receiver.username} accepted your trade offer.`
+            : 'Your trade offer was accepted.',
+        },
+      ];
     } else {
       const statusMap = { reject: 'rejected', cancel: 'cancelled' } as const;
       updated = await prisma.tradeOffer.update({
@@ -185,7 +207,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         data: { status: statusMap[action] },
         select: { id: true, status: true, updatedAt: true },
       });
+
+      if (action === 'reject') {
+        notifications = [
+          {
+            userId: offer.offererId,
+            auctionId: offer.id,
+            kind: 'trade_offer_rejected',
+            title: 'Your trade offer was rejected',
+            body: offer.receiver
+              ? `@${offer.receiver.username} rejected your trade offer.`
+              : 'Your trade offer was rejected.',
+          },
+        ];
+      }
+
+      if (action === 'cancel' && offer.receiverId) {
+        notifications = [
+          {
+            userId: offer.receiverId,
+            auctionId: offer.id,
+            kind: 'trade_offer_cancelled',
+            title: 'A trade offer was cancelled',
+            body: `@${offer.offerer.username} cancelled a trade offer sent to you.`,
+          },
+        ];
+      }
     }
+
+    await createNotificationsSafely(notifications);
 
     revalidatePath('/garage');
     revalidatePath('/trading');
@@ -197,6 +247,34 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ error: 'Failed to update trade offer' }, { status: 500 });
+  }
+}
+
+async function createNotificationsSafely(
+  notifications: Array<{
+    userId: string;
+    auctionId: string;
+    kind: string;
+    title: string;
+    body: string;
+  }>,
+) {
+  if (notifications.length === 0) {
+    return;
+  }
+
+  try {
+    await prisma.notification.createMany({
+      data: notifications,
+      skipDuplicates: true,
+    });
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      (error.code !== 'P2021' && error.code !== 'P2022')
+    ) {
+      throw error;
+    }
   }
 }
 
