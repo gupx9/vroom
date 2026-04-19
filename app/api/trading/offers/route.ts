@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 
 interface CreateTradeOfferBody {
   receiverId?: string;         // optional — null means open/public offer
@@ -33,12 +34,26 @@ export async function POST(request: Request) {
     }
 
     // If targeting a specific receiver, validate they exist
+    let receiverUsername: string | null = null;
+
     if (receiverId) {
       const receiver = await prisma.user.findUnique({ where: { id: receiverId }, select: { id: true } });
       if (!receiver) {
         return NextResponse.json({ error: 'Receiver not found' }, { status: 404 });
       }
+
+      const receiverProfile = await prisma.user.findUnique({
+        where: { id: receiverId },
+        select: { username: true },
+      });
+      receiverUsername = receiverProfile?.username ?? null;
     }
+
+    const offererProfile = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { username: true },
+    });
+    const offererUsername = offererProfile?.username ?? 'Someone';
 
     // Verify the offerer owns all offered items
     const offeredCars = await prisma.car.findMany({
@@ -115,11 +130,53 @@ export async function POST(request: Request) {
       });
     });
 
+    if (receiverId) {
+      await createNotificationsSafely([
+        {
+          userId: receiverId,
+          auctionId: offer.id,
+          kind: 'trade_offer_received',
+          title: `New trade offer from @${offererUsername}`,
+          body: receiverUsername
+            ? `@${offererUsername} sent you a trade offer. Review it in Trading.`
+            : 'You received a new trade offer. Review it in Trading.',
+        },
+      ]);
+    }
+
     return NextResponse.json({ success: true, offer }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create trade offer';
     console.error('POST /api/trading/offers failed:', error);
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function createNotificationsSafely(
+  notifications: Array<{
+    userId: string;
+    auctionId: string;
+    kind: string;
+    title: string;
+    body: string;
+  }>,
+) {
+  if (notifications.length === 0) {
+    return;
+  }
+
+  try {
+    await prisma.notification.createMany({
+      data: notifications,
+      skipDuplicates: true,
+    });
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      (error.code !== 'P2021' && error.code !== 'P2022')
+    ) {
+      throw error;
+    }
   }
 }
 

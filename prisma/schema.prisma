@@ -112,6 +112,20 @@ model AuctionBid {
   @@index([bidderId])
 }
 
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  auctionId String   // Resource id: auction id for auction events, tradeOffer id for trade events
+  kind      String   @default("auction_result")
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, kind, auctionId])
+  @@index([userId, readAt, createdAt])
+}
+
 model Diorama {
   id           String   @id @default(uuid())
   userId       String
@@ -139,4 +153,33 @@ model TradeOffer {
   status           String   @default("pending") // "pending" | "accepted" | "rejected" | "cancelled"
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+}
+
+model MarketplaceTransaction {
+  id                String   @id @default(uuid())
+  externalTxnId     String   @unique
+  itemType          String
+  itemId            String
+  sellerId          String
+  buyerId           String
+  paymentMethod     String
+  status            String   @default("initiated")
+  amount            Float
+  customerName      String
+  customerEmail     String
+  customerPhone     String
+  shippingAddress   String?
+  shippingCity      String?
+  shippingPostcode  String?
+  gatewayUrl        String?
+  gatewayPayload    Json?
+  sslValidationId   String?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([buyerId, createdAt])
+  @@index([sellerId, createdAt])
+  @@index([status, createdAt])
+  @@index([itemType, itemId])
 }
