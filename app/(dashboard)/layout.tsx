@@ -1,10 +1,12 @@
-import { logout } from '@/app/actions/auth';
-import { verifySession } from '@/lib/auth';
-import Image from 'next/image';
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import prisma from '@/lib/prisma';
-import DashboardNav from '@/app/components/DashboardNav';
+import { logout } from "@/app/actions/auth";
+import { verifySession } from "@/lib/auth";
+import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
+import DashboardNav from "@/app/components/DashboardNav";
+import NotificationSystem from "@/app/components/NotificationSystem";
+import GlobalAuctionFinalizer from "@/app/components/GlobalAuctionFinalizer";
 
 export default async function DashboardLayout({
   children,
@@ -14,7 +16,7 @@ export default async function DashboardLayout({
   const session = await verifySession();
 
   if (!session?.userId) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const user = await prisma.user.findUnique({
@@ -22,23 +24,35 @@ export default async function DashboardLayout({
     select: { username: true, role: true },
   });
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      <GlobalAuctionFinalizer />
+
       {/* Top Navigation Bar */}
       <header className="border-b border-zinc-800 bg-zinc-950 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
           {/* Logo */}
-          <Link href="/dashboard" className="hover:opacity-80 transition-opacity shrink-0">
-            <Image src="/logo.png" alt="VROOM.IO" width={220} height={64} className="h-30 w-auto" />
+          <Link
+            href="/dashboard"
+            className="hover:opacity-80 transition-opacity shrink-0"
+          >
+            <Image
+              src="/logo.png"
+              alt="VROOM.IO"
+              width={220}
+              height={64}
+              className="h-30 w-auto"
+            />
           </Link>
 
           {/* Center nav links */}
           <DashboardNav isAdmin={isAdmin} />
 
           {/* Right: username + logout */}
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
+            <NotificationSystem />
             <span className="text-sm text-zinc-400 hidden sm:block">
               <span className="text-white font-medium">{user?.username}</span>
               {isAdmin && (
