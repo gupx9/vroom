@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { CHAT_SYSTEM_PROMPT } from "@/lib/chat-system-prompt";
 
 type ClientMessage = {
   role: "user" | "assistant";
@@ -20,9 +19,11 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       message?: string;
       messages?: ClientMessage[];
+      systemPrompt?: string;
     };
 
     const message = body.message?.trim() ?? "";
+    const systemPrompt = body.systemPrompt?.trim() || "You are a helpful assistant.";
 
     if (!message) {
       return NextResponse.json(
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
         temperature: 0.7,
         max_tokens: 500,
         messages: [
-          { role: "system", content: CHAT_SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           ...history,
           { role: "user", content: message },
         ],

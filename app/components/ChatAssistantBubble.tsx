@@ -1,12 +1,46 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
+const CHAT_SYSTEM_PROMPT =
+  "You are Vroom's AI assistant. A website for buying and selling model cars. Be concise, helpful, and friendly. You shoulb be knowledgable about model car community.";
+
+const NAVIGATION_CUE_REGEX =
+  /\b(go|take|open|navigate|bring|head|visit|switch|send|redirect|route)\b|\b(tab|page|screen)\b/i;
+
+const NAVIGATION_TARGETS = [
+  {
+    href: "/garage",
+    label: "Garage",
+    keywords: ["garage", "my garage", "collection"],
+  },
+  {
+    href: "/marketplace",
+    label: "Marketplace",
+    keywords: ["marketplace", "market", "shop", "buy", "sell"],
+  },
+  {
+    href: "/auctions",
+    label: "Auctions",
+    keywords: ["auction", "auctions", "bids", "bidding"],
+  },
+  {
+    href: "/trading",
+    label: "Trading",
+    keywords: ["trade", "trading", "offers"],
+  },
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    keywords: ["dashboard", "home"],
+  },
+] as const;
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -16,8 +50,23 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
+function getNavigationIntent(input: string) {
+  const normalized = input.toLowerCase();
+
+  if (!NAVIGATION_CUE_REGEX.test(normalized)) {
+    return null;
+  }
+
+  const target = NAVIGATION_TARGETS.find((item) =>
+    item.keywords.some((keyword) => normalized.includes(keyword)),
+  );
+
+  return target ?? null;
+}
+
 export default function ChatAssistantBubble() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,6 +108,21 @@ export default function ChatAssistantBubble() {
     setMessages(nextMessages);
     setInput("");
     setError(null);
+
+    const navigationIntent = getNavigationIntent(message);
+
+    if (navigationIntent) {
+      router.push(navigationIntent.href);
+      setMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content: `Taking you to ${navigationIntent.label}.`,
+        },
+      ]);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -70,6 +134,7 @@ export default function ChatAssistantBubble() {
         body: JSON.stringify({
           message,
           messages: conversationHistory,
+          systemPrompt: CHAT_SYSTEM_PROMPT,
         }),
       });
 
