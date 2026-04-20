@@ -163,10 +163,10 @@ export default function TradeOfferComposerModal({
   const isTargeted = !!prefilledRequestedItem?.user?.id;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/75 backdrop-blur-sm p-4 pt-32">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100dvh-8rem)] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+        <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950">
           <div>
             <h2 className="text-white text-lg font-bold">Propose a Trade</h2>
             {isTargeted ? (
@@ -188,7 +188,7 @@ export default function TradeOfferComposerModal({
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-5">
           {/* What you want — targeted listing preview or free text */}
           <div className="space-y-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">

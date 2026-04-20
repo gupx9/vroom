@@ -167,9 +167,9 @@ export default function ProfileActions({
 
       {/* ── REVIEW MODAL ──────────────────────────────────────────────────── */}
       {(reviewPhase === 'selecting' || reviewPhase === 'loading') && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-800">
+        <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-4 pt-32 bg-black/70 backdrop-blur-sm">
+          <div className="flex w-full max-w-2xl max-h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 shadow-2xl">
+            <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900">
               <h2 className="text-lg font-bold text-white">Review @{targetUsername}</h2>
               <button
                 onClick={() => { setReviewPhase('idle'); setSelectedStars(0); setReviewComment(''); setReviewError(''); }}
@@ -182,7 +182,7 @@ export default function ProfileActions({
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-5">
               {/* Star selector */}
               <div>
                 <p className="text-sm text-zinc-400 mb-3">Select a rating</p>
@@ -270,9 +270,9 @@ export default function ProfileActions({
 
       {/* ── REPORT MODAL ──────────────────────────────────────────────────── */}
       {(reportPhase === 'composing' || reportPhase === 'loading') && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-zinc-800">
+        <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto p-4 pt-32 bg-black/70 backdrop-blur-sm">
+          <div className="flex w-full max-w-md max-h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl">
+            <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900">
               <h2 className="text-lg font-bold text-white">Report @{targetUsername}</h2>
               <button
                 onClick={() => { setReportPhase('idle'); setReportReason(''); setReportError(''); }}
@@ -285,7 +285,7 @@ export default function ProfileActions({
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="min-h-0 flex-1 overflow-y-auto p-6 space-y-5">
               <p className="text-sm text-zinc-400">
                 Reports are reviewed by admins before any action is taken. Please describe your concern clearly.
               </p>

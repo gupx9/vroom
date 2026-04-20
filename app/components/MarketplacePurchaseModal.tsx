@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import MarketplacePriceAdvisor from '@/app/components/MarketplacePriceAdvisor';
 
 type PaymentMethod = 'cash_on_delivery' | 'card' | 'mobile_banking';
 
@@ -174,10 +175,10 @@ export default function MarketplacePurchaseModal({ open, onClose, item }: Market
 		}
 	};
 
-	return (
-		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-			<div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-				<div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+		return (
+			<div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4 pt-32">
+				<div className="bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100dvh-8rem)] overflow-hidden flex flex-col">
+					<div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900">
 					<div>
 						<h2 className="text-white text-lg font-bold">Item Details</h2>
 						<p className="text-zinc-500 text-xs mt-0.5">Review listing and complete purchase</p>
@@ -194,7 +195,7 @@ export default function MarketplacePurchaseModal({ open, onClose, item }: Market
 					</button>
 				</div>
 
-				<div className="px-6 py-5 overflow-y-auto space-y-5">
+					<div className="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-5">
 					<div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 flex gap-4">
 						<div className="w-28 h-20 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
 							{item.imageData ? (
@@ -210,6 +211,18 @@ export default function MarketplacePurchaseModal({ open, onClose, item }: Market
 							<p className="text-red-400 font-bold mt-2">৳{item.sellingPrice.toLocaleString()}</p>
 						</div>
 					</div>
+
+					<MarketplacePriceAdvisor
+						mode="buy"
+						item={{
+							itemId: item.id,
+							type: item.type,
+							title: item.title,
+							subtitle: item.subtitle,
+							condition: item.condition,
+							currentPrice: item.sellingPrice,
+						}}
+					/>
 
 					{!showForm && (
 						<button

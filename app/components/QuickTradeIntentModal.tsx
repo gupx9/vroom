@@ -30,9 +30,9 @@ export default function QuickTradeIntentModal({ onClose, onSubmit }: QuickTradeI
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-black/75 backdrop-blur-sm p-4 pt-32">
+      <div className="w-full max-w-md max-h-[calc(100dvh-6rem)] rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden flex flex-col">
+        <div className="shrink-0 flex items-center justify-between border-b border-zinc-800 px-5 py-4 bg-zinc-950">
           <div>
             <h2 className="text-base font-bold text-white">Post Trade Request</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Describe what you want in exchange.</p>
@@ -50,7 +50,7 @@ export default function QuickTradeIntentModal({ onClose, onSubmit }: QuickTradeI
           </button>
         </div>
 
-        <div className="p-5 space-y-3">
+        <div className="min-h-0 flex-1 overflow-y-auto p-5 space-y-3">
           <textarea
             value={wantDescription}
             onChange={(e) => {
@@ -70,7 +70,7 @@ export default function QuickTradeIntentModal({ onClose, onSubmit }: QuickTradeI
           )}
         </div>
 
-        <div className="flex gap-3 px-5 pb-5">
+        <div className="shrink-0 flex gap-3 px-5 pb-5 bg-zinc-950">
           <button
             type="button"
             onClick={onClose}

@@ -40,8 +40,8 @@ export default async function GaragePage() {
   ]);
 
   const totalWorth =
-    cars.reduce((sum, c) => sum + c.price, 0) +
-    dioramas.reduce((sum, d) => sum + d.price, 0);
+    cars.reduce((sum: number, c) => sum + Number(c.price || 0), 0) +
+    dioramas.reduce((sum: number, d) => sum + Number(d.price || 0), 0);
 
   const totalItems = cars.length + dioramas.length;
 
