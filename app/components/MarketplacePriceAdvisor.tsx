@@ -5,8 +5,9 @@ import { useState } from 'react';
 type AdviceMode = 'sell' | 'buy';
 
 type AdviceResult = {
-  provider: 'gemini' | 'fallback';
+  provider: 'gemini' | 'groq' | 'fallback';
   sourceNote: string;
+  debugError?: string;
   mode: AdviceMode;
   recommendedPrice: number;
   lowPrice: number;
@@ -104,7 +105,7 @@ export default function MarketplacePriceAdvisor({
         <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-zinc-700 bg-zinc-950 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300">
-              {advice.provider === 'gemini' ? 'Gemini AI' : 'Local estimate'}
+              {advice.provider === 'gemini' ? 'Gemini AI' : advice.provider === 'groq' ? 'GROQ fallback' : 'Local estimate'}
             </span>
             <span className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
               advice.marketSignal === 'overpriced'
@@ -121,6 +122,12 @@ export default function MarketplacePriceAdvisor({
           </div>
 
           <p className="text-[11px] text-zinc-500">{advice.sourceNote}</p>
+
+          {advice.debugError && (
+            <p className="rounded-md border border-amber-700/60 bg-amber-950/30 px-2 py-1 text-[11px] text-amber-300">
+              {advice.debugError}
+            </p>
+          )}
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">

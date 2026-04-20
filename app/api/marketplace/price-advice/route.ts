@@ -24,8 +24,9 @@ interface ComparableListing {
 }
 
 interface AdviceResponse {
-  provider: 'gemini' | 'fallback';
+  provider: 'gemini' | 'groq' | 'fallback';
   sourceNote: string;
+  debugError?: string;
   mode: AdviceMode;
   recommendedPrice: number;
   lowPrice: number;
@@ -81,6 +82,7 @@ function buildFallbackAdvice(
   compSummary: { average: number; median: number; min: number; max: number },
   rationale: string,
   comparables: ComparableListing[],
+  debugError?: string,
 ): AdviceResponse {
   const basis = compSummary.median || compSummary.average || currentPrice || 0;
   const recommendedPrice = roundPrice(Math.max(50, basis || currentPrice || 50));
@@ -93,6 +95,7 @@ function buildFallbackAdvice(
   return {
     provider: 'fallback',
     sourceNote: rationale,
+    debugError,
     mode,
     recommendedPrice,
     lowPrice,
@@ -101,6 +104,51 @@ function buildFallbackAdvice(
     confidence,
     rationale,
     comparableCount,
+    comparables,
+  };
+}
+
+function toErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function buildAiAdvice(
+  mode: AdviceMode,
+  currentPrice: number,
+  compSummary: { average: number; median: number; min: number; max: number },
+  result: Partial<AdviceResponse>,
+  provider: 'gemini' | 'groq',
+  sourceNote: string,
+  comparables: ComparableListing[],
+): AdviceResponse {
+  const recommendedPrice = roundPrice(Number(result.recommendedPrice || compSummary.median || compSummary.average || currentPrice || 50));
+  const lowPrice = roundPrice(Number(result.lowPrice || Math.max(50, recommendedPrice * 0.85)));
+  const highPrice = roundPrice(Number(result.highPrice || Math.max(lowPrice, recommendedPrice * 1.15)));
+
+  return {
+    provider,
+    sourceNote,
+    mode,
+    recommendedPrice,
+    lowPrice,
+    highPrice,
+    marketSignal: result.marketSignal === 'underpriced' || result.marketSignal === 'fair' || result.marketSignal === 'overpriced'
+      ? result.marketSignal
+      : currentPrice > highPrice
+        ? 'overpriced'
+        : currentPrice < lowPrice
+          ? 'underpriced'
+          : 'fair',
+    confidence: result.confidence === 'low' || result.confidence === 'medium' || result.confidence === 'high'
+      ? result.confidence
+      : compSummary.median > 0
+        ? 'medium'
+        : 'low',
+    rationale: typeof result.rationale === 'string' && result.rationale.trim()
+      ? result.rationale.trim()
+      : 'Used live marketplace comparisons to estimate a fair price.',
+    comparableCount: comparables.length,
     comparables,
   };
 }
@@ -223,85 +271,49 @@ Guidance:
   let advice: AdviceResponse;
 
   try {
-    if (getGeminiApiKey()) {
-      try {
-        const result = (await generateGeminiJson(prompt)) as Partial<AdviceResponse>;
-
-        const recommendedPrice = roundPrice(Number(result.recommendedPrice || compSummary.median || compSummary.average || currentPrice || 50));
-        const lowPrice = roundPrice(Number(result.lowPrice || Math.max(50, recommendedPrice * 0.85)));
-        const highPrice = roundPrice(Number(result.highPrice || Math.max(lowPrice, recommendedPrice * 1.15)));
-
-        advice = {
-          provider: 'gemini',
-          sourceNote: 'Gemini AI analyzed current marketplace comparables and item condition.',
-          mode,
-          recommendedPrice,
-          lowPrice,
-          highPrice,
-          marketSignal: result.marketSignal === 'underpriced' || result.marketSignal === 'fair' || result.marketSignal === 'overpriced'
-            ? result.marketSignal
-            : currentPrice > highPrice
-              ? 'overpriced'
-              : currentPrice < lowPrice
-                ? 'underpriced'
-                : 'fair',
-          confidence: result.confidence === 'low' || result.confidence === 'medium' || result.confidence === 'high'
-            ? result.confidence
-            : compSummary.median > 0
-              ? 'medium'
-              : 'low',
-          rationale: typeof result.rationale === 'string' && result.rationale.trim()
-            ? result.rationale.trim()
-            : 'Used live marketplace comparisons to estimate a fair price.',
-          comparableCount: comparables.length,
-          comparables,
-        };
-      } catch (geminiError) {
-        console.error('Gemini failed, trying GROQ:', geminiError instanceof Error ? geminiError.message : String(geminiError));
-        
-        // Try GROQ as fallback
-        const result = (await generateGroqJson(prompt)) as Partial<AdviceResponse>;
-
-        const recommendedPrice = roundPrice(Number(result.recommendedPrice || compSummary.median || compSummary.average || currentPrice || 50));
-        const lowPrice = roundPrice(Number(result.lowPrice || Math.max(50, recommendedPrice * 0.85)));
-        const highPrice = roundPrice(Number(result.highPrice || Math.max(lowPrice, recommendedPrice * 1.15)));
-
-        advice = {
-          provider: 'gemini',
-          sourceNote: 'AI pricing (via GROQ) based on marketplace comparables and item condition.',
-          mode,
-          recommendedPrice,
-          lowPrice,
-          highPrice,
-          marketSignal: result.marketSignal === 'underpriced' || result.marketSignal === 'fair' || result.marketSignal === 'overpriced'
-            ? result.marketSignal
-            : currentPrice > highPrice
-              ? 'overpriced'
-              : currentPrice < lowPrice
-                ? 'underpriced'
-                : 'fair',
-          confidence: result.confidence === 'low' || result.confidence === 'medium' || result.confidence === 'high'
-            ? result.confidence
-            : compSummary.median > 0
-              ? 'medium'
-              : 'low',
-          rationale: typeof result.rationale === 'string' && result.rationale.trim()
-            ? result.rationale.trim()
-            : 'Used live marketplace comparisons to estimate a fair price.',
-          comparableCount: comparables.length,
-          comparables,
-        };
-      }
-    } else {
+    if (!getGeminiApiKey()) {
       throw new Error('Gemini API key is not configured');
     }
-  } catch (error) {
-    console.error('AI pricing error:', error);
-    const fallbackRationale = error instanceof Error && error.message.includes('Gemini API key')
-      ? 'Gemini is not configured yet, so this is a local market estimate. Add GEMINI_API_KEY to use AI pricing.'
-      : 'AI pricing unavailable, so this is a local market estimate based on current listings.';
 
-    advice = buildFallbackAdvice(mode, currentPrice, comparables.length, compSummary, fallbackRationale, comparables);
+    try {
+      const result = (await generateGeminiJson(prompt)) as Partial<AdviceResponse>;
+      advice = buildAiAdvice(
+        mode,
+        currentPrice,
+        compSummary,
+        result,
+        'gemini',
+        'Gemini AI analyzed marketplace comparables and item condition.',
+        comparables,
+      );
+    } catch (geminiError) {
+      const geminiErrorMessage = toErrorMessage(geminiError);
+      console.error('Gemini pricing failed, trying GROQ:', geminiErrorMessage);
+
+      try {
+        const result = (await generateGroqJson(prompt)) as Partial<AdviceResponse>;
+        advice = buildAiAdvice(
+          mode,
+          currentPrice,
+          compSummary,
+          result,
+          'groq',
+          'GROQ fallback analyzed marketplace comparables and item condition.',
+          comparables,
+        );
+      } catch (groqError) {
+        const groqErrorMessage = toErrorMessage(groqError);
+        throw new Error(`Gemini failed (${geminiErrorMessage}); GROQ fallback failed (${groqErrorMessage})`);
+      }
+    }
+  } catch (error) {
+    const exactError = toErrorMessage(error);
+    console.error('AI pricing error:', exactError);
+
+    const fallbackRationale = 'AI pricing unavailable, so this is a local market estimate based on current listings.';
+    const debugError = `TEMP DEBUG: AI pricing failed: ${exactError}`;
+
+    advice = buildFallbackAdvice(mode, currentPrice, comparables.length, compSummary, fallbackRationale, comparables, debugError);
   }
 
   return NextResponse.json(advice, { status: 200 });

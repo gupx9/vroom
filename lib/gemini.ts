@@ -84,6 +84,8 @@ export async function generateGroqJson(prompt: string) {
     throw new Error('GROQ API key is not configured');
   }
 
+  const model = process.env.GROQ_MODEL?.trim() || 'llama-3.3-70b-versatile';
+
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -91,7 +93,7 @@ export async function generateGroqJson(prompt: string) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.2,
       max_tokens: 500,
