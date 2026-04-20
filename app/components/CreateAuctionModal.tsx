@@ -97,7 +97,7 @@ export default function CreateAuctionModal({ onClose }: Props) {
       duration === "custom"
         ? parseDaysHoursMinutesToHours(customDuration)
         : duration;
-    if (!Number.isFinite(selectedDurationHours) || selectedDurationHours <= 0) {
+    if (selectedDurationHours === null || !Number.isFinite(selectedDurationHours) || selectedDurationHours <= 0) {
       setSubmitError(
         "Enter a valid custom duration as DD:HH:MM (days:hours:minutes)",
       );
