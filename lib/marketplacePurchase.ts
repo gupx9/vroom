@@ -1,7 +1,12 @@
-import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 
 type ItemType = 'car' | 'diorama';
+
+type MarketplaceTx = {
+  car: typeof prisma.car;
+  diorama: typeof prisma.diorama;
+  marketplaceTransaction: typeof prisma.marketplaceTransaction;
+};
 
 export async function getSaleItem(itemType: ItemType, itemId: string) {
   if (itemType === 'car') {
@@ -51,7 +56,7 @@ export async function getSaleItem(itemType: ItemType, itemId: string) {
 }
 
 export async function transferSaleItemToBuyer(
-  tx: Prisma.TransactionClient,
+  tx: MarketplaceTx,
   itemType: ItemType,
   itemId: string,
   sellerId: string,

@@ -1,7 +1,6 @@
 import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { Prisma } from '@prisma/client';
 
 interface CreateTradeOfferBody {
   receiverId?: string;         // optional — null means open/public offer
@@ -172,12 +171,16 @@ async function createNotificationsSafely(
     });
   } catch (error) {
     if (
-      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      !isKnownRequestError(error) ||
       (error.code !== 'P2021' && error.code !== 'P2022')
     ) {
       throw error;
     }
   }
+}
+
+function isKnownRequestError(error: unknown): error is { code: string } {
+  return !!error && typeof error === 'object' && 'code' in error && typeof (error as { code?: unknown }).code === 'string';
 }
 
 // GET /api/trading/offers?filter=sent|received|all (default: all)
