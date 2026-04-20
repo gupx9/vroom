@@ -53,11 +53,53 @@ export type AuctionDetail = {
   myBid: number | null;
 };
 
+type ActiveAuctionRecord = {
+  id: string;
+  carId: string;
+  startingBid: number;
+  endsAt: Date;
+  seller: { username: string };
+  car: {
+    imageData: string;
+    brand: string;
+    carModel: string;
+    size: string;
+    condition: string;
+    description: string | null;
+  };
+  bids: Array<{ amount: number }>;
+};
+
+type AuctionTransactionClient = {
+  $queryRaw: typeof prisma.$queryRaw;
+  car: typeof prisma.car;
+  auction: typeof prisma.auction;
+};
+
+type AuctionDetailRecord = {
+  id: string;
+  carId: string;
+  startingBid: number;
+  endsAt: Date;
+  finalized: boolean;
+  sellerId: string;
+  winnerId: string | null;
+  seller: { username: string };
+  winner: { username: string } | null;
+  car: AuctionDetail['car'];
+  bids: Array<{
+    id: string;
+    bidderId: string;
+    amount: number;
+    bidder: { username: string };
+  }>;
+};
+
 // ─── Get all active (non-finalized, not expired) auctions ────────────────────
 
 export async function getActiveAuctions(): Promise<{ auctions: AuctionListItem[] }> {
   const now = new Date();
-  const auctions = await prisma.auction.findMany({
+  const auctions: ActiveAuctionRecord[] = await prisma.auction.findMany({
     where: { finalized: false, endsAt: { gt: now } },
     orderBy: { endsAt: 'asc' },
     select: {
@@ -84,7 +126,7 @@ export async function getActiveAuctions(): Promise<{ auctions: AuctionListItem[]
   });
 
   return {
-    auctions: auctions.map((a) => ({
+    auctions: auctions.map((a: ActiveAuctionRecord) => ({
       id: a.id,
       carId: a.carId,
       startingBid: a.startingBid,
@@ -156,7 +198,7 @@ export async function createAuction(
     return { error: 'You are temporarily banned and cannot create auctions' };
   }
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: AuctionTransactionClient) => {
     // Lock the car row so concurrent requests cannot create multiple active auctions for the same car.
     await tx.$queryRaw`SELECT id FROM "Car" WHERE id = ${carId} FOR UPDATE`;
 
@@ -222,7 +264,7 @@ export async function getAuctionDetail(auctionId: string): Promise<
     if (!auction) return { error: 'Auction not found' };
   }
 
-  const myBid = auction.bids.find((b) => b.bidderId === session.userId)?.amount ?? null;
+  const myBid = auction.bids.find((b: AuctionDetailRecord['bids'][number]) => b.bidderId === session.userId)?.amount ?? null;
 
   return {
     auction: {
@@ -243,7 +285,7 @@ export async function getAuctionDetail(auctionId: string): Promise<
   };
 }
 
-async function fetchAuctionDetailRecord(auctionId: string) {
+async function fetchAuctionDetailRecord(auctionId: string): Promise<AuctionDetailRecord | null> {
   return prisma.auction.findUnique({
     where: { id: auctionId },
     select: {
@@ -359,7 +401,7 @@ function isKnownRequestError(error: unknown): error is { code: string } {
 }
 
 function buildAuctionResultNotifications(
-  auction: Awaited<ReturnType<typeof fetchAuctionDetailRecord>>,
+  auction: AuctionDetailRecord | null,
   winnerId: string | null,
   winningAmount: number | null,
 ) {

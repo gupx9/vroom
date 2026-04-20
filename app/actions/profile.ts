@@ -4,6 +4,11 @@ import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
+type ProfileTransactionClient = {
+  userReview: typeof prisma.userReview;
+  user: typeof prisma.user;
+};
+
 /** Fetch a user's public profile by username */
 export async function getPublicProfile(username: string) {
   const session = await verifySession();
@@ -95,7 +100,7 @@ export async function submitReview(targetId: string, stars: number, comment?: st
   // Stars < 3: pending admin approval
   const status = stars >= 3 ? 'approved' : 'pending';
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: ProfileTransactionClient) => {
     await tx.userReview.create({
       data: {
         targetId,

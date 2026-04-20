@@ -6,6 +6,43 @@ const MAX_MESSAGE_LENGTH = 1200;
 
 type ReactionValue = -1 | 0 | 1;
 
+type CommunityMessageReaction = {
+  userId: string;
+  value: number;
+};
+
+type CommunityReply = {
+  id: string;
+  messageId: string;
+  authorId: string;
+  author: {
+    id: string;
+    username: string;
+    reputation: number;
+  };
+  content: string;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  reactions: CommunityMessageReaction[];
+};
+
+type CommunityMessage = {
+  id: string;
+  authorId: string;
+  author: {
+    id: string;
+    username: string;
+    reputation: number;
+  };
+  content: string;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  reactions: CommunityMessageReaction[];
+  replies: CommunityReply[];
+};
+
 function toReactionSummary(
   reactions: Array<{ userId: string; value: number }>,
   viewerId: string,
@@ -32,7 +69,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const messages = await prisma.communityMessage.findMany({
+  const messages: CommunityMessage[] = await prisma.communityMessage.findMany({
     orderBy: { createdAt: 'desc' },
     take: 60,
     include: {
@@ -70,7 +107,7 @@ export async function GET() {
     },
   });
 
-  const payload = messages.map((message) => {
+  const payload = messages.map((message: CommunityMessage) => {
     const summary = toReactionSummary(message.reactions, session.userId);
 
     return {
@@ -86,23 +123,23 @@ export async function GET() {
       viewerReaction: summary.viewerReaction,
       replies: message.replies
         .filter((reply) => !reply.deletedAt)
-        .map((reply) => {
-        const replySummary = toReactionSummary(reply.reactions, session.userId);
+        .map((reply: CommunityReply) => {
+          const replySummary = toReactionSummary(reply.reactions, session.userId);
 
-        return {
-          id: reply.id,
-          messageId: reply.messageId,
-          authorId: reply.authorId,
-          author: reply.author,
-          content: reply.content,
-          isDeleted: false,
-          createdAt: reply.createdAt,
-          updatedAt: reply.updatedAt,
-          likes: replySummary.likes,
-          dislikes: replySummary.dislikes,
-          viewerReaction: replySummary.viewerReaction,
-        };
-      }),
+          return {
+            id: reply.id,
+            messageId: reply.messageId,
+            authorId: reply.authorId,
+            author: reply.author,
+            content: reply.content,
+            isDeleted: false,
+            createdAt: reply.createdAt,
+            updatedAt: reply.updatedAt,
+            likes: replySummary.likes,
+            dislikes: replySummary.dislikes,
+            viewerReaction: replySummary.viewerReaction,
+          };
+        }),
     };
   });
 

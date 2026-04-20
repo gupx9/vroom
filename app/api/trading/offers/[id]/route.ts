@@ -3,6 +3,16 @@ import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 
+type TradeOfferTransactionClient = {
+  car: typeof prisma.car;
+  diorama: typeof prisma.diorama;
+  tradeOffer: typeof prisma.tradeOffer;
+};
+
+type TradeItemRow = {
+  id: string;
+};
+
 interface UpdateTradeOfferBody {
   action?: 'accept' | 'reject' | 'cancel';
 }
@@ -88,24 +98,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       const offeredIds = offer.offeredCarIds;
       const requestedIds = offer.requestedCarIds;
 
-      updated = await prisma.$transaction(async (tx) => {
+      updated = await prisma.$transaction(async (tx: TradeOfferTransactionClient) => {
         const [offeredCars, offeredDioramas, requestedCars, requestedDioramas] = await Promise.all([
           tx.car.findMany({
             where: { id: { in: offeredIds }, userId: offer.offererId, forTrade: true },
             select: { id: true },
-          }),
+          }) as Promise<TradeItemRow[]>,
           tx.diorama.findMany({
             where: { id: { in: offeredIds }, userId: offer.offererId, forTrade: true },
             select: { id: true },
-          }),
+          }) as Promise<TradeItemRow[]>,
           tx.car.findMany({
             where: { id: { in: requestedIds }, userId: offer.receiverId!, forTrade: true },
             select: { id: true },
-          }),
+          }) as Promise<TradeItemRow[]>,
           tx.diorama.findMany({
             where: { id: { in: requestedIds }, userId: offer.receiverId!, forTrade: true },
             select: { id: true },
-          }),
+          }) as Promise<TradeItemRow[]>,
         ]);
 
         const offeredFound = offeredCars.length + offeredDioramas.length;
@@ -115,10 +125,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           throw new Error('One or more trade items are no longer available for trade.');
         }
 
-        const offeredCarOnlyIds = offeredCars.map((item) => item.id);
-        const offeredDioramaOnlyIds = offeredDioramas.map((item) => item.id);
-        const requestedCarOnlyIds = requestedCars.map((item) => item.id);
-        const requestedDioramaOnlyIds = requestedDioramas.map((item) => item.id);
+        const offeredCarOnlyIds = offeredCars.map((item: TradeItemRow) => item.id);
+        const offeredDioramaOnlyIds = offeredDioramas.map((item: TradeItemRow) => item.id);
+        const requestedCarOnlyIds = requestedCars.map((item: TradeItemRow) => item.id);
+        const requestedDioramaOnlyIds = requestedDioramas.map((item: TradeItemRow) => item.id);
 
         await Promise.all([
           offeredCarOnlyIds.length

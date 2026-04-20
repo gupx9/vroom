@@ -2,6 +2,51 @@ import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
+type TradeOfferCreateTransactionClient = {
+  car: typeof prisma.car;
+  diorama: typeof prisma.diorama;
+  tradeOffer: typeof prisma.tradeOffer;
+};
+
+type TradeItemRow = {
+  id: string;
+};
+
+type TradeCarListingRow = {
+  id: string;
+  brand: string;
+  carModel: string;
+  size: string;
+  imageData: unknown;
+};
+
+type TradeDioramaListingRow = {
+  id: string;
+  description: string;
+  imageData: unknown;
+};
+
+type TradeOfferSummary = {
+  id: string;
+  offeredCarIds: string[];
+  requestedCarIds: string[];
+  wantDescription: string;
+  message: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  offerer: {
+    id: string;
+    username: string;
+    reputation: number;
+  };
+  receiver: {
+    id: string;
+    username: string;
+    reputation: number;
+  } | null;
+};
+
 interface CreateTradeOfferBody {
   receiverId?: string;         // optional — null means open/public offer
   offeredCarIds?: string[];
@@ -55,11 +100,11 @@ export async function POST(request: Request) {
     const offererUsername = offererProfile?.username ?? 'Someone';
 
     // Verify the offerer owns all offered items
-    const offeredCars = await prisma.car.findMany({
+    const offeredCars: TradeItemRow[] = await prisma.car.findMany({
       where: { id: { in: offeredCarIds }, userId: session.userId },
       select: { id: true },
     });
-    const offeredDioramas = await prisma.diorama.findMany({
+    const offeredDioramas: TradeItemRow[] = await prisma.diorama.findMany({
       where: { id: { in: offeredCarIds }, userId: session.userId },
       select: { id: true },
     });
@@ -77,11 +122,11 @@ export async function POST(request: Request) {
 
     // If requestedCarIds provided with a receiver, validate they belong to the receiver
     if (receiverId && requestedCarIds.length > 0) {
-      const requestedCars = await prisma.car.findMany({
+      const requestedCars: TradeItemRow[] = await prisma.car.findMany({
         where: { id: { in: requestedCarIds }, userId: receiverId, forTrade: true },
         select: { id: true },
       });
-      const requestedDioramas = await prisma.diorama.findMany({
+      const requestedDioramas: TradeItemRow[] = await prisma.diorama.findMany({
         where: { id: { in: requestedCarIds }, userId: receiverId, forTrade: true },
         select: { id: true },
       });
@@ -98,9 +143,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const offeredCarOnlyIds = offeredCars.map((item) => item.id);
-    const offeredDioramaOnlyIds = offeredDioramas.map((item) => item.id);
-    const offer = await prisma.$transaction(async (tx) => {
+    const offeredCarOnlyIds = offeredCars.map((item: TradeItemRow) => item.id);
+    const offeredDioramaOnlyIds = offeredDioramas.map((item: TradeItemRow) => item.id);
+    const offer = await prisma.$transaction(async (tx: TradeOfferCreateTransactionClient) => {
       await Promise.all([
         offeredCarOnlyIds.length
           ? tx.car.updateMany({
@@ -213,22 +258,22 @@ export async function GET(request: Request) {
             where: { offererId: session.userId },
             select: selectFields,
             orderBy: { createdAt: 'desc' },
-          })
+          }) as Promise<TradeOfferSummary[]>
         : Promise.resolve([]),
       filter !== 'sent'
         ? prisma.tradeOffer.findMany({
             where: { receiverId: session.userId },
             select: selectFields,
             orderBy: { createdAt: 'desc' },
-          })
+          }) as Promise<TradeOfferSummary[]>
         : Promise.resolve([]),
     ]);
 
     // Resolve all item IDs to their details for display
     const allIds = [
       ...new Set([
-        ...sent.flatMap((o) => [...o.offeredCarIds, ...o.requestedCarIds]),
-        ...received.flatMap((o) => [...o.offeredCarIds, ...o.requestedCarIds]),
+        ...sent.flatMap((o: TradeOfferSummary) => [...o.offeredCarIds, ...o.requestedCarIds]),
+        ...received.flatMap((o: TradeOfferSummary) => [...o.offeredCarIds, ...o.requestedCarIds]),
       ]),
     ];
 
@@ -237,17 +282,17 @@ export async function GET(request: Request) {
           prisma.car.findMany({
             where: { id: { in: allIds } },
             select: { id: true, brand: true, carModel: true, size: true, imageData: true },
-          }),
+          }) as Promise<TradeCarListingRow[]>,
           prisma.diorama.findMany({
             where: { id: { in: allIds } },
             select: { id: true, description: true, imageData: true },
-          }),
+          }) as Promise<TradeDioramaListingRow[]>,
         ])
-      : [[], []];
+      : [[], []] as [TradeCarListingRow[], TradeDioramaListingRow[]];
 
     const itemMap: Record<string, { type: 'car' | 'diorama'; [key: string]: unknown }> = {};
-    cars.forEach((c) => { itemMap[c.id] = { type: 'car', ...c }; });
-    dioramas.forEach((d) => { itemMap[d.id] = { type: 'diorama', ...d }; });
+    cars.forEach((car: TradeCarListingRow) => { itemMap[car.id] = { type: 'car', ...car }; });
+    dioramas.forEach((diorama: TradeDioramaListingRow) => { itemMap[diorama.id] = { type: 'diorama', ...diorama }; });
 
     return NextResponse.json({ success: true, sent, received, itemMap }, { status: 200 });
   } catch {

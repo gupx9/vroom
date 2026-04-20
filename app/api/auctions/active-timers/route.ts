@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
+type ActiveTimerAuction = {
+  id: string;
+  endsAt: Date;
+};
+
 export async function GET() {
   try {
     const session = await verifySession();
@@ -10,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const auctions = await prisma.auction.findMany({
+    const auctions: ActiveTimerAuction[] = await prisma.auction.findMany({
       where: { finalized: false },
       orderBy: { endsAt: 'asc' },
       select: {

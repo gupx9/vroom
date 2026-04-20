@@ -111,7 +111,7 @@ export async function completeMarketplaceTransaction(
   externalTxnId: string,
   sslValidationId?: string,
 ) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: MarketplaceTx) => {
     const transaction = await tx.marketplaceTransaction.findUnique({
       where: { externalTxnId },
     });

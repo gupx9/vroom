@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import type { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { verifySession } from '@/lib/auth';
 import {
@@ -12,6 +11,12 @@ import { initiateSSLCommerzSandboxPayment } from '@/lib/sslcommerz';
 
 type ItemType = 'car' | 'diorama';
 type PaymentMethod = 'cash_on_delivery' | 'card' | 'mobile_banking';
+
+type MarketplacePurchaseTransactionClient = {
+  marketplaceTransaction: typeof prisma.marketplaceTransaction;
+  car: typeof prisma.car;
+  diorama: typeof prisma.diorama;
+};
 
 interface PurchaseRequestBody {
   itemId?: string;
@@ -135,7 +140,7 @@ export async function POST(request: Request) {
     const externalTxnId = `VRM-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
 
     if (paymentMethod === 'cash_on_delivery') {
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: MarketplacePurchaseTransactionClient) => {
         await tx.marketplaceTransaction.create({
           data: {
             externalTxnId,
@@ -229,7 +234,7 @@ export async function POST(request: Request) {
       valueB: transaction.id,
       valueC: buyer.username,
     });
-    const gatewayPayload = paymentInit as unknown as Prisma.InputJsonValue;
+    const gatewayPayload = paymentInit as never;
 
     const gatewayUrl = typeof paymentInit.GatewayPageURL === 'string' ? paymentInit.GatewayPageURL : null;
     if (!gatewayUrl) {

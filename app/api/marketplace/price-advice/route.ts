@@ -23,6 +23,25 @@ interface ComparableListing {
   size?: string;
 }
 
+type ComparableCarRow = {
+  brand: string;
+  carModel: string | null;
+  size: string | null;
+  condition: string | null;
+  sellingPrice: number;
+  user: {
+    username: string;
+  };
+};
+
+type ComparableDioramaRow = {
+  description: string;
+  sellingPrice: number;
+  user: {
+    username: string;
+  };
+};
+
 interface AdviceResponse {
   provider: 'gemini' | 'groq' | 'fallback';
   sourceNote: string;
@@ -210,14 +229,14 @@ export async function POST(request: Request) {
 
   const comparables: ComparableListing[] =
     itemType === 'car'
-      ? cars.map((car) => ({
-          label: `${car.brand} ${car.carModel}`.trim(),
+      ? (cars as ComparableCarRow[]).map((car) => ({
+          label: `${car.brand} ${car.carModel ?? ''}`.trim(),
           price: car.sellingPrice,
-          condition: car.condition,
+          condition: car.condition ?? undefined,
           seller: car.user.username,
-          size: car.size,
+          size: car.size ?? undefined,
         }))
-      : dioramas.map((diorama) => ({
+      : (dioramas as ComparableDioramaRow[]).map((diorama) => ({
           label: diorama.description,
           price: diorama.sellingPrice,
           seller: diorama.user.username,
