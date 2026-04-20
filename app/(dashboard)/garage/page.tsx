@@ -3,11 +3,34 @@ import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import GarageGrid from '@/app/components/GarageGrid';
 
+type GarageCar = {
+  id: string;
+  imageData: string;
+  brand: string;
+  carModel: string;
+  size: string;
+  condition: string;
+  price: number;
+  sellingPrice: number;
+  forSale: boolean;
+  forTrade: boolean;
+};
+
+type GarageDiorama = {
+  id: string;
+  imageData: string | null;
+  description: string;
+  price: number;
+  sellingPrice: number;
+  forSale: boolean;
+  forTrade: boolean;
+};
+
 export default async function GaragePage() {
   const session = await verifySession();
   if (!session?.userId) redirect('/login');
 
-  const [cars, dioramas] = await Promise.all([
+  const [cars, dioramas]: [GarageCar[], GarageDiorama[]] = await Promise.all([
     prisma.car.findMany({
       where: { userId: session.userId },
       orderBy: { createdAt: 'desc' },
@@ -40,8 +63,8 @@ export default async function GaragePage() {
   ]);
 
   const totalWorth =
-    cars.reduce((sum: number, c) => sum + Number(c.price || 0), 0) +
-    dioramas.reduce((sum: number, d) => sum + Number(d.price || 0), 0);
+    cars.reduce((sum: number, c: GarageCar) => sum + c.price, 0) +
+    dioramas.reduce((sum: number, d: GarageDiorama) => sum + d.price, 0);
 
   const totalItems = cars.length + dioramas.length;
 
