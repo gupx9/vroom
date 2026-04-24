@@ -27,7 +27,7 @@ async function readCallbackData(request: Request) {
 function redirectToMarketplace(request: Request, state: string) {
   const redirectUrl = new URL('/marketplace', request.url);
   redirectUrl.searchParams.set('purchase', state);
-  return NextResponse.redirect(redirectUrl);
+  return NextResponse.redirect(redirectUrl, 303);
 }
 
 async function handleCallback(request: Request) {
