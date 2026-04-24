@@ -18,7 +18,7 @@ async function readData(request: Request) {
 function redirect(request: Request, state: string) {
   const redirectUrl = new URL('/marketplace', request.url);
   redirectUrl.searchParams.set('purchase', state);
-  return NextResponse.redirect(redirectUrl);
+  return NextResponse.redirect(redirectUrl, 303);
 }
 
 async function handle(request: Request) {
