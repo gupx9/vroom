@@ -1,0 +1,43 @@
+{
+  "table": "CommunityReply",
+  "exportedAt": "2026-04-26T21:23:39.455Z",
+  "rowCount": 3,
+  "columns": [
+    "id",
+    "messageId",
+    "content",
+    "authorId",
+    "deletedAt",
+    "createdAt",
+    "updatedAt"
+  ],
+  "rows": [
+    {
+      "id": "a0b0fc44-ea9a-4045-b474-f721ba835ede",
+      "messageId": "8817596d-f838-48a6-aa43-b0e2743c7b68",
+      "content": "",
+      "authorId": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "deletedAt": "2026-04-19T13:59:29.356Z",
+      "createdAt": "2026-04-19T13:59:14.531Z",
+      "updatedAt": "2026-04-19T13:59:29.359Z"
+    },
+    {
+      "id": "8b447d2f-9edb-4eb6-be44-6eb02076ce92",
+      "messageId": "8817596d-f838-48a6-aa43-b0e2743c7b68",
+      "content": "me too",
+      "authorId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "deletedAt": null,
+      "createdAt": "2026-04-19T14:09:31.584Z",
+      "updatedAt": "2026-04-19T14:09:31.584Z"
+    },
+    {
+      "id": "23f358cc-197b-4499-b43c-aff5193e9f3f",
+      "messageId": "cca606a8-ed75-42ce-b06d-0b8673de6b27",
+      "content": "hfsdbkgsdbgfj",
+      "authorId": "f592c1f8-9ba2-478f-abe8-34ae11e0f046",
+      "deletedAt": null,
+      "createdAt": "2026-04-20T03:03:51.288Z",
+      "updatedAt": "2026-04-20T03:03:51.288Z"
+    }
+  ]
+}

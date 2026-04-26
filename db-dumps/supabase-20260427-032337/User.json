@@ -1,0 +1,127 @@
+{
+  "table": "User",
+  "exportedAt": "2026-04-26T21:23:40.190Z",
+  "rowCount": 9,
+  "columns": [
+    "id",
+    "username",
+    "email",
+    "password",
+    "isVerified",
+    "otp",
+    "reputation",
+    "role",
+    "bannedUntil",
+    "createdAt"
+  ],
+  "rows": [
+    {
+      "id": "a3ff666e-de2a-4a02-8d79-a90e41a7ad8f",
+      "username": "Oda",
+      "email": "op@gmail.com",
+      "password": "$2b$10$olGZZq4geoV26A3L/GXMIODcgnvzFHtgGgaqqdW1VGvxlsuL51vc6",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-03-15T22:35:19.262Z"
+    },
+    {
+      "id": "f590ed73-33a1-41b3-a630-07ebf2b3d4fc",
+      "username": "SajimRZ",
+      "email": "s@gmail.com",
+      "password": "$2b$10$9F9D.q9GgKQOS7UixplLx.L1bOGHgtQp8IQDjLp57qc0oQJsGbGhW",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 25,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-03-15T22:32:23.241Z"
+    },
+    {
+      "id": "3561b651-ce93-47a2-82c8-624a88bf424f",
+      "username": "faiyaz",
+      "email": "f@gmail.com",
+      "password": "$2b$10$p2/.i1BboDIaLK45SqSqhOlmoM10yRk64KAEzQTZe3J3NmdjMet3S",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-13T02:28:10.141Z"
+    },
+    {
+      "id": "09874c5d-3549-480c-be57-749cc4367638",
+      "username": "jawad",
+      "email": "j@gmail.com",
+      "password": "$2b$10$JM.CyiqRwQdb99xEIJSb5u3iGsw7.n.lGPeZfsae5GEwydt4wHe7.",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-13T02:38:55.825Z"
+    },
+    {
+      "id": "93350a48-1b4e-46f3-85ba-6a3c3b4030f4",
+      "username": "sajim",
+      "email": "sajim@gmail.com",
+      "password": "$2b$10$NV7suVojO87dK3jkRKlsG.G0rnrgRKG9/er7ynuQ54T5QNR.9Da66",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-13T02:39:31.710Z"
+    },
+    {
+      "id": "f592c1f8-9ba2-478f-abe8-34ae11e0f046",
+      "username": "admin",
+      "email": "admin@gmail.com",
+      "password": "$2b$10$g/coT0.lCSP3pj5xj/BLB.N3VU5evgURM.fIZ6u6mVVDb1OEMhBgu",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "admin",
+      "bannedUntil": null,
+      "createdAt": "2026-04-13T03:00:44.905Z"
+    },
+    {
+      "id": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "username": "user1",
+      "email": "user1@gmail.com",
+      "password": "$2b$10$5DwCqWpLXMcT5sJaSPbsbuw8ZNDeCilQDZ5L.pzjAal68pUIe8qEu",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-16T12:32:46.269Z"
+    },
+    {
+      "id": "af4467c2-9aec-4e37-87f5-ded64b1e92ca",
+      "username": "sam",
+      "email": "samin@gmail.com",
+      "password": "$2b$10$yukS3tlG1ojGtOUsLyThLecSg4Vb6isuYq0XN90Etgy11JeLO1jfS",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 0,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-21T03:39:09.452Z"
+    },
+    {
+      "id": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "username": "user2",
+      "email": "user2@gmail.com",
+      "password": "$2b$10$E9UrwSBkJH0Lbt1ZAoP1wuwgHMaS60hh0F8plCCdUC7LRyG.skzIi",
+      "isVerified": true,
+      "otp": null,
+      "reputation": 45,
+      "role": "user",
+      "bannedUntil": null,
+      "createdAt": "2026-04-16T13:05:14.289Z"
+    }
+  ]
+}

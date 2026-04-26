@@ -1,0 +1,61 @@
+{
+  "table": "UserReview",
+  "exportedAt": "2026-04-26T21:23:40.406Z",
+  "rowCount": 5,
+  "columns": [
+    "id",
+    "targetId",
+    "authorId",
+    "stars",
+    "comment",
+    "status",
+    "createdAt"
+  ],
+  "rows": [
+    {
+      "id": "8214bc3a-29e7-49dc-9d6e-cc4eb7f737da",
+      "targetId": "f590ed73-33a1-41b3-a630-07ebf2b3d4fc",
+      "authorId": "a3ff666e-de2a-4a02-8d79-a90e41a7ad8f",
+      "stars": 5,
+      "comment": "gil fan",
+      "status": "approved",
+      "createdAt": "2026-03-15T22:35:57.356Z"
+    },
+    {
+      "id": "6d07ca8d-135e-4ec5-b5a7-9fbe4c8d6810",
+      "targetId": "3561b651-ce93-47a2-82c8-624a88bf424f",
+      "authorId": "09874c5d-3549-480c-be57-749cc4367638",
+      "stars": 2,
+      "comment": "somethings",
+      "status": "pending",
+      "createdAt": "2026-04-13T03:07:57.087Z"
+    },
+    {
+      "id": "3aab90a9-4c8c-40a7-8d59-bd57a27271ae",
+      "targetId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "authorId": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "stars": 4,
+      "comment": null,
+      "status": "approved",
+      "createdAt": "2026-04-16T13:21:59.858Z"
+    },
+    {
+      "id": "f600d251-e8b7-4250-9a7c-4976d944a717",
+      "targetId": "f590ed73-33a1-41b3-a630-07ebf2b3d4fc",
+      "authorId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "stars": 2,
+      "comment": "scammed me hhe",
+      "status": "pending",
+      "createdAt": "2026-04-20T02:53:48.919Z"
+    },
+    {
+      "id": "dfd23bb3-8964-4d0a-8740-3cf9bbef6aa5",
+      "targetId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "authorId": "af4467c2-9aec-4e37-87f5-ded64b1e92ca",
+      "stars": 5,
+      "comment": "fat nigro",
+      "status": "approved",
+      "createdAt": "2026-04-21T03:41:01.012Z"
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "table": "AuctionBid",
+  "exportedAt": "2026-04-26T21:23:38.493Z",
+  "rowCount": 8,
+  "columns": [
+    "id",
+    "auctionId",
+    "bidderId",
+    "amount",
+    "createdAt",
+    "updatedAt"
+  ],
+  "rows": [
+    {
+      "id": "3a770e5c-f62e-416c-9cbc-144eb0fda14b",
+      "auctionId": "d81747aa-1f92-40cb-a4ae-0a0b4c4db62b",
+      "bidderId": "a3ff666e-de2a-4a02-8d79-a90e41a7ad8f",
+      "amount": 1550,
+      "createdAt": "2026-03-15T22:36:20.852Z",
+      "updatedAt": "2026-03-15T22:37:00.399Z"
+    },
+    {
+      "id": "019b2130-8b84-4d55-bebe-9be791080964",
+      "auctionId": "5963b474-15a2-4fdc-9e16-e9f6d3ad7f4f",
+      "bidderId": "f590ed73-33a1-41b3-a630-07ebf2b3d4fc",
+      "amount": 101,
+      "createdAt": "2026-03-15T23:52:17.058Z",
+      "updatedAt": "2026-03-15T23:52:17.058Z"
+    },
+    {
+      "id": "65e29b23-b883-4bbc-b9ce-3e7be8336e5d",
+      "auctionId": "bd31259e-08a7-4965-b6f4-b15921cf6d7e",
+      "bidderId": "a3ff666e-de2a-4a02-8d79-a90e41a7ad8f",
+      "amount": 1100,
+      "createdAt": "2026-03-16T00:17:00.743Z",
+      "updatedAt": "2026-03-16T00:17:00.743Z"
+    },
+    {
+      "id": "4c27e5bf-6bb7-4dc3-a739-34183b823c62",
+      "auctionId": "2dc79363-2380-45e5-9ec5-6f76f2772569",
+      "bidderId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "amount": 1001,
+      "createdAt": "2026-04-16T14:01:13.580Z",
+      "updatedAt": "2026-04-16T14:01:13.580Z"
+    },
+    {
+      "id": "5771b31f-12b6-42d8-b5c4-3895bb5a9390",
+      "auctionId": "57f5dd3c-e3f3-4ad4-8c37-eb079ec39ad7",
+      "bidderId": "09874c5d-3549-480c-be57-749cc4367638",
+      "amount": 1002,
+      "createdAt": "2026-04-19T08:32:02.039Z",
+      "updatedAt": "2026-04-19T08:32:02.039Z"
+    },
+    {
+      "id": "6f0c3f52-2b7d-40d5-ac49-1e46871f6145",
+      "auctionId": "3efd31cf-71c7-4fad-9aaa-a8e27a581f1f",
+      "bidderId": "09874c5d-3549-480c-be57-749cc4367638",
+      "amount": 110,
+      "createdAt": "2026-04-19T08:45:29.925Z",
+      "updatedAt": "2026-04-19T08:45:29.925Z"
+    },
+    {
+      "id": "5f554b2e-53da-40d4-9486-188a676aad38",
+      "auctionId": "c8feaa58-9b5c-4bab-8778-1d3c39c2fd7f",
+      "bidderId": "f590ed73-33a1-41b3-a630-07ebf2b3d4fc",
+      "amount": 1100,
+      "createdAt": "2026-04-19T08:53:36.853Z",
+      "updatedAt": "2026-04-19T08:53:36.853Z"
+    },
+    {
+      "id": "79cc4077-22cf-4541-8b62-3c4a05712690",
+      "auctionId": "e43ef712-8f7a-49a7-b890-e50f43669989",
+      "bidderId": "af4467c2-9aec-4e37-87f5-ded64b1e92ca",
+      "amount": 620,
+      "createdAt": "2026-04-21T03:40:25.613Z",
+      "updatedAt": "2026-04-21T03:44:13.787Z"
+    }
+  ]
+}

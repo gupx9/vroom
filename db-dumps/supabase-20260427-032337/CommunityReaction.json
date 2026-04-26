@@ -1,0 +1,43 @@
+{
+  "table": "CommunityReaction",
+  "exportedAt": "2026-04-26T21:23:39.344Z",
+  "rowCount": 3,
+  "columns": [
+    "id",
+    "userId",
+    "messageId",
+    "replyId",
+    "value",
+    "createdAt",
+    "updatedAt"
+  ],
+  "rows": [
+    {
+      "id": "fb89972f-5ea1-4d05-a7d7-4f727924862a",
+      "userId": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "messageId": "8817596d-f838-48a6-aa43-b0e2743c7b68",
+      "replyId": null,
+      "value": -1,
+      "createdAt": "2026-04-19T13:59:06.144Z",
+      "updatedAt": "2026-04-19T13:59:08.892Z"
+    },
+    {
+      "id": "6cbcec37-2017-49b8-80de-84a0618cb0c9",
+      "userId": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "messageId": null,
+      "replyId": "a0b0fc44-ea9a-4045-b474-f721ba835ede",
+      "value": 1,
+      "createdAt": "2026-04-19T13:59:22.150Z",
+      "updatedAt": "2026-04-19T13:59:23.393Z"
+    },
+    {
+      "id": "627e55a8-4baf-474c-8341-937df0061c3f",
+      "userId": "776a54d7-70ad-4c9e-8c4a-b2bc0ec67f1a",
+      "messageId": "8817596d-f838-48a6-aa43-b0e2743c7b68",
+      "replyId": null,
+      "value": 1,
+      "createdAt": "2026-04-19T14:09:54.111Z",
+      "updatedAt": "2026-04-19T14:09:54.111Z"
+    }
+  ]
+}

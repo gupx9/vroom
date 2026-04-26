@@ -1,0 +1,39 @@
+{
+  "table": "CommunityMessage",
+  "exportedAt": "2026-04-26T21:23:39.236Z",
+  "rowCount": 3,
+  "columns": [
+    "id",
+    "content",
+    "authorId",
+    "deletedAt",
+    "createdAt",
+    "updatedAt"
+  ],
+  "rows": [
+    {
+      "id": "8817596d-f838-48a6-aa43-b0e2743c7b68",
+      "content": "hello\nim excited for the launch",
+      "authorId": "5e2a4cc3-5fb0-4078-889e-febc3f50f259",
+      "deletedAt": null,
+      "createdAt": "2026-04-19T13:57:27.240Z",
+      "updatedAt": "2026-04-19T13:57:27.240Z"
+    },
+    {
+      "id": "143deab5-c724-4605-a0f4-b14298c2bb42",
+      "content": "real time hope",
+      "authorId": "3561b651-ce93-47a2-82c8-624a88bf424f",
+      "deletedAt": null,
+      "createdAt": "2026-04-19T22:50:36.787Z",
+      "updatedAt": "2026-04-19T22:50:36.787Z"
+    },
+    {
+      "id": "cca606a8-ed75-42ce-b06d-0b8673de6b27",
+      "content": "give me a gtfr nismo",
+      "authorId": "f592c1f8-9ba2-478f-abe8-34ae11e0f046",
+      "deletedAt": null,
+      "createdAt": "2026-04-20T03:03:21.976Z",
+      "updatedAt": "2026-04-20T03:03:21.976Z"
+    }
+  ]
+}

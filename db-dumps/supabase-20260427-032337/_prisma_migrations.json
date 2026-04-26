@@ -1,0 +1,107 @@
+{
+  "table": "_prisma_migrations",
+  "exportedAt": "2026-04-26T21:23:40.514Z",
+  "rowCount": 9,
+  "columns": [
+    "id",
+    "checksum",
+    "finished_at",
+    "migration_name",
+    "logs",
+    "rolled_back_at",
+    "started_at",
+    "applied_steps_count"
+  ],
+  "rows": [
+    {
+      "id": "18bd9bd3-f097-4fd7-90ef-9fdbd68342b9",
+      "checksum": "4908fdd7c5fe237a317724b8ace7fb6a83ffadc3fd00590c39981efced81fad1",
+      "finished_at": "2026-03-16T04:21:58.422Z",
+      "migration_name": "20260316042155_auctions_redesign",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": "2026-03-16T04:21:56.128Z",
+      "applied_steps_count": 1
+    },
+    {
+      "id": "1584946f-e6d6-4d80-bedd-25752d280633",
+      "checksum": "2461cf763293098ae1b7bf96d1702422f7b96917c4ca7410f2ad97de7e7ddac0",
+      "finished_at": "2026-03-16T05:50:23.877Z",
+      "migration_name": "20260316055023_auction_car_seller_unique",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": "2026-03-16T05:50:23.517Z",
+      "applied_steps_count": 1
+    },
+    {
+      "id": "4b893b39-1a12-4ca4-bb38-44492335dd5c",
+      "checksum": "97ce940e2c65e61bf044bd2866adaa8c740d6f21c3fba04003bfdf2ba3e804ba",
+      "finished_at": "2026-03-16T06:14:41.606Z",
+      "migration_name": "20260316070000_allow_repeat_car_auctions",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": "2026-03-16T06:14:40.607Z",
+      "applied_steps_count": 1
+    },
+    {
+      "id": "7d089abd-c2b7-48af-88d0-eb25bb4f53b3",
+      "checksum": "99ce817b2f39a585a2fbadc71ff0ff9be8997b1d6ee7200e916a737115850ae5",
+      "finished_at": "2026-04-13T08:41:23.755Z",
+      "migration_name": "20260413000000_add_trading_models",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": "2026-04-13T08:41:20.781Z",
+      "applied_steps_count": 1
+    },
+    {
+      "id": "dd763887-0e3e-478e-941b-194d5f172069",
+      "checksum": "20192d0a3a627d5fce862f6241dc7d235cb003e3e2bca4249510ccc3e7d8f9e0",
+      "finished_at": null,
+      "migration_name": "20260419190000_add_notifications",
+      "logs": "A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20260419190000_add_notifications\n\nDatabase error code: 42P07\n\nDatabase error:\nERROR: relation \"Notification\" already exists\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E42P07), message: \"relation \\\"Notification\\\" already exists\", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some(\"heap.c\"), line: Some(1160), routine: Some(\"heap_create_with_catalog\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20260419190000_add_notifications\"\n             at schema-engine\\connectors\\sql-schema-connector\\src\\apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20260419190000_add_notifications\"\n             at schema-engine\\commands\\src\\commands\\apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine\\core\\src\\state.rs:248",
+      "rolled_back_at": "2026-04-19T17:08:37.314Z",
+      "started_at": "2026-04-19T17:08:15.891Z",
+      "applied_steps_count": 0
+    },
+    {
+      "id": "f55150ff-37ce-453a-9434-504f1b9f8214",
+      "checksum": "20192d0a3a627d5fce862f6241dc7d235cb003e3e2bca4249510ccc3e7d8f9e0",
+      "finished_at": "2026-04-19T17:08:37.419Z",
+      "migration_name": "20260419190000_add_notifications",
+      "logs": "",
+      "rolled_back_at": null,
+      "started_at": "2026-04-19T17:08:37.419Z",
+      "applied_steps_count": 0
+    },
+    {
+      "id": "868187c2-e0e1-47eb-8645-a1042ea72d84",
+      "checksum": "2e9cff7a352808332710e3fc1972a9357aafea21887a142007b456f8b90b57e6",
+      "finished_at": null,
+      "migration_name": "20260419193000_notification_kind_scoped_unique",
+      "logs": "A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20260419193000_notification_kind_scoped_unique\n\nDatabase error code: 42704\n\nDatabase error:\nERROR: index \"Notification_userId_auctionId_key\" does not exist\n\nDbError { severity: \"ERROR\", parsed_severity: Some(Error), code: SqlState(E42704), message: \"index \\\"Notification_userId_auctionId_key\\\" does not exist\", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some(\"tablecmds.c\"), line: Some(1421), routine: Some(\"DropErrorMsgNonExistent\") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name=\"20260419193000_notification_kind_scoped_unique\"\n             at schema-engine\\connectors\\sql-schema-connector\\src\\apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name=\"20260419193000_notification_kind_scoped_unique\"\n             at schema-engine\\commands\\src\\commands\\apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine\\core\\src\\state.rs:248",
+      "rolled_back_at": "2026-04-19T17:10:04.957Z",
+      "started_at": "2026-04-19T17:08:46.783Z",
+      "applied_steps_count": 0
+    },
+    {
+      "id": "c8052c50-907d-4d00-8345-6f5dc9cd4479",
+      "checksum": "2e9cff7a352808332710e3fc1972a9357aafea21887a142007b456f8b90b57e6",
+      "finished_at": "2026-04-19T17:10:05.068Z",
+      "migration_name": "20260419193000_notification_kind_scoped_unique",
+      "logs": "",
+      "rolled_back_at": null,
+      "started_at": "2026-04-19T17:10:05.068Z",
+      "applied_steps_count": 0
+    },
+    {
+      "id": "0fa4940e-263f-426b-9b6d-60ab434ad2ae",
+      "checksum": "2a7aad360e7c6432726659786693ec2593c9bc3bb0d3289d259902fbb0cab39c",
+      "finished_at": "2026-04-19T17:10:14.161Z",
+      "migration_name": "20260419211000_add_marketplace_transactions",
+      "logs": null,
+      "rolled_back_at": null,
+      "started_at": "2026-04-19T17:10:13.590Z",
+      "applied_steps_count": 1
+    }
+  ]
+}
